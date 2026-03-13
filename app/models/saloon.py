@@ -83,6 +83,9 @@ class Service(AuditMixin, Base):
 
     # Core fields
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(
+        String(1000), nullable=True, default=None
+    )
     price: Mapped[Decimal] = mapped_column(
         Numeric(precision=10, scale=2),
         nullable=False,
