@@ -17,7 +17,7 @@ class BookingBase(BaseModel):
     customer_name: Annotated[
         str, Field(min_length=1, max_length=255, examples=["John Doe"])
     ]
-    booking_time: Annotated[datetime, Field(examples=["2026-03-20T10:00:00Z"])]
+    start_time: Annotated[datetime, Field(examples=["2026-03-20T10:00:00Z"])]
 
 
 class BookingCreate(BookingBase):
@@ -35,6 +35,7 @@ class BookingRead(BookingBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    end_time: datetime
     status: str
     created_at: datetime
     updated_at: datetime

@@ -45,9 +45,10 @@ class Booking(AuditMixin, Base):
 
     # Core fields
     customer_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    booking_time: Mapped[datetime] = mapped_column(
+    start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
 
     # Relationships

@@ -12,10 +12,11 @@ AuditMixin (which contributes created_at, updated_at, created_by, updated_by).
 
 import uuid
 from decimal import Decimal
+from datetime import time as dt_time
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid
+from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid, Boolean, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base
@@ -59,9 +60,54 @@ class Store(AuditMixin, Base):
         back_populates="store",
         cascade="all, delete-orphan",
     )
+    hours: Mapped[List["StoreHours"]] = relationship(
+        "StoreHours",
+        back_populates="store",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Store id={self.id} name={self.name!r}>"
+
+
+# ---------------------------------------------------------------------------
+# StoreHours
+# ---------------------------------------------------------------------------
+
+
+class StoreHours(AuditMixin, Base):
+    """Business hours for a store on a specific day of the week."""
+
+    __tablename__ = "store_hours"
+
+    # Primary key
+    id: Mapped[UUID] = mapped_column(
+        Uuid(),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    # Foreign key
+    store_id: Mapped[UUID] = mapped_column(
+        Uuid(),
+        ForeignKey("stores.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Hours fields
+    day_of_week: Mapped[int] = mapped_column(
+        Integer, nullable=False
+    )  # 0=Monday, 6=Sunday
+    open_time: Mapped[dt_time] = mapped_column(Time, nullable=False)
+    close_time: Mapped[dt_time] = mapped_column(Time, nullable=False)
+    is_closed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Relationships
+    store: Mapped["Store"] = relationship("Store", back_populates="hours")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<StoreHours store={self.store_id} day={self.day_of_week} closed={self.is_closed}>"
 
 
 # ---------------------------------------------------------------------------

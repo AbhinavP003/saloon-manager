@@ -2,6 +2,7 @@
 FastAPI router for Booking CRUD endpoints.
 """
 
+from datetime import timedelta
 from typing import List
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.booking import Booking
-from app.models.saloon import Service, Store
+from app.models.saloon import Service, Store, StoreHours
 from app.schemas.booking import BookingCreate, BookingRead
 
 router = APIRouter(tags=["bookings"])
@@ -51,8 +52,53 @@ async def create_booking(
             detail=f"Service {payload.service_id} does not belong to Store {payload.store_id}.",
         )
 
-    # 3. Create booking
-    booking = Booking(**payload.model_dump())
+    # 3. Calculate end_time
+    end_time = payload.start_time + timedelta(minutes=service.duration_minutes)
+
+    # 4. Enforce Store Hours
+    day_of_week = payload.start_time.weekday()  # 0 = Monday, 6 = Sunday
+    booking_time_only = payload.start_time.time()
+    end_time_only = end_time.time()
+
+    hours = await db.scalar(
+        select(StoreHours).where(
+            StoreHours.store_id == payload.store_id,
+            StoreHours.day_of_week == day_of_week,
+        )
+    )
+    if not hours:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store hours are not configured for this day.",
+        )
+    if hours.is_closed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store is closed on this day.",
+        )
+    if booking_time_only < hours.open_time or end_time_only > hours.close_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Booking ({booking_time_only} - {end_time_only}) falls outside operating hours ({hours.open_time} - {hours.close_time}).",
+        )
+
+    # 5. Check overlaps
+    # Overlap condition: new_start < existing_end AND new_end > existing_start
+    overlap_query = select(Booking).where(
+        Booking.store_id == payload.store_id,
+        Booking.status != "cancelled",
+        Booking.start_time < end_time,
+        Booking.end_time > payload.start_time,
+    )
+    overlap = await db.scalar(overlap_query)
+    if overlap:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Time slot is already booked for this store.",
+        )
+
+    # 6. Create booking
+    booking = Booking(**payload.model_dump(), end_time=end_time)
     db.add(booking)
     await db.flush()
     await db.refresh(booking)
@@ -79,8 +125,6 @@ async def list_store_bookings(
         )
 
     result = await db.execute(
-        select(Booking)
-        .where(Booking.store_id == store_id)
-        .order_by(Booking.booking_time)
+        select(Booking).where(Booking.store_id == store_id).order_by(Booking.start_time)
     )
     return list(result.scalars().all())
