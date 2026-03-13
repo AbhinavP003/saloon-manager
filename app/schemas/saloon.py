@@ -9,7 +9,7 @@ Schemas are split into three tiers:
 
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Annotated, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,12 +23,18 @@ from pydantic import BaseModel, ConfigDict, Field
 class ServiceBase(BaseModel):
     """Fields shared across all Service schema variants."""
 
-    name: str = Field(..., max_length=255, examples=["Haircut"])
-    description: Optional[str] = Field(
-        default=None, max_length=1000, examples=["Classic scissor cut"]
-    )
-    price: Decimal = Field(..., gt=0, decimal_places=2, examples=[250.00])
-    duration_minutes: int = Field(..., gt=0, examples=[30])
+    name: Annotated[str, Field(min_length=1, max_length=255, examples=["Haircut"])]
+    description: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            min_length=1,
+            max_length=1000,
+            examples=["Classic scissor cut"],
+        ),
+    ]
+    price: Annotated[Decimal, Field(gt=0, decimal_places=2, examples=[250.00])]
+    duration_minutes: Annotated[int, Field(ge=5, examples=[30])]
 
 
 class ServiceCreate(ServiceBase):
@@ -55,25 +61,24 @@ class ServiceRead(ServiceBase):
 class StoreBase(BaseModel):
     """Fields shared across all Store schema variants."""
 
-    name: str = Field(..., max_length=255, examples=["Downtown Cuts"])
-    address: str = Field(..., max_length=500, examples=["123 Main St, City"])
-    contact_number: Optional[str] = Field(
-        default=None, max_length=20, examples=["+91-9876543210"]
-    )
-    latitude: Optional[Decimal] = Field(
-        default=None,
-        ge=-90,
-        le=90,
-        decimal_places=6,
-        examples=[12.971599],
-    )
-    longitude: Optional[Decimal] = Field(
-        default=None,
-        ge=-180,
-        le=180,
-        decimal_places=6,
-        examples=[77.594566],
-    )
+    name: Annotated[
+        str, Field(min_length=1, max_length=255, examples=["Downtown Cuts"])
+    ]
+    address: Annotated[
+        str, Field(min_length=1, max_length=500, examples=["123 Main St, City"])
+    ]
+    contact_number: Annotated[
+        Optional[str],
+        Field(default=None, min_length=1, max_length=20, examples=["+91-9876543210"]),
+    ]
+    latitude: Annotated[
+        Optional[Decimal],
+        Field(default=None, ge=-90, le=90, decimal_places=6, examples=[12.971599]),
+    ]
+    longitude: Annotated[
+        Optional[Decimal],
+        Field(default=None, ge=-180, le=180, decimal_places=6, examples=[77.594566]),
+    ]
 
 
 class StoreCreate(StoreBase):
@@ -93,3 +98,9 @@ class StoreRead(StoreBase):
     created_at: datetime
     updated_at: datetime
     services: List[ServiceRead] = Field(default_factory=list)
+
+
+class StoreWithDistance(StoreRead):
+    """Store representation that includes the calculated distance from a search point."""
+
+    distance: float = Field(..., description="Distance in kilometers")
