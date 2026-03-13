@@ -66,9 +66,6 @@ class Store(AuditMixin, Base):
         cascade="all, delete-orphan",
     )
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"<Store id={self.id} name={self.name!r}>"
-
 
 # ---------------------------------------------------------------------------
 # StoreHours
@@ -105,9 +102,6 @@ class StoreHours(AuditMixin, Base):
 
     # Relationships
     store: Mapped["Store"] = relationship("Store", back_populates="hours")
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"<StoreHours store={self.store_id} day={self.day_of_week} closed={self.is_closed}>"
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +145,3 @@ class Service(AuditMixin, Base):
         "Store",
         back_populates="services",
     )
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"<Service id={self.id} name={self.name!r} store_id={self.store_id}>"

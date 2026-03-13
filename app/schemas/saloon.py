@@ -7,12 +7,13 @@ Schemas are split into three tiers:
   Read   – payload returned from the API (includes DB-generated fields).
 """
 
-from datetime import datetime
+from datetime import time
 from decimal import Decimal
 from typing import Annotated, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+from app.schemas.common import AuditSchema
 
 
 # ---------------------------------------------------------------------------
@@ -44,15 +45,6 @@ class ServiceCreate(ServiceBase):
     """
 
 
-class ServiceRead(ServiceBase):
-    """Service representation returned by the API."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    store_id: UUID
-
-
 # ---------------------------------------------------------------------------
 # Store schemas
 # ---------------------------------------------------------------------------
@@ -61,46 +53,50 @@ class ServiceRead(ServiceBase):
 class StoreBase(BaseModel):
     """Fields shared across all Store schema variants."""
 
-    name: Annotated[
-        str, Field(min_length=1, max_length=255, examples=["Downtown Cuts"])
-    ]
-    address: Annotated[
-        str, Field(min_length=1, max_length=500, examples=["123 Main St, City"])
-    ]
-    contact_number: Annotated[
-        Optional[str],
-        Field(default=None, min_length=1, max_length=20, examples=["+91-9876543210"]),
-    ]
-    latitude: Annotated[
-        Optional[Decimal],
-        Field(default=None, ge=-90, le=90, decimal_places=6, examples=[12.971599]),
-    ]
-    longitude: Annotated[
-        Optional[Decimal],
-        Field(default=None, ge=-180, le=180, decimal_places=6, examples=[77.594566]),
-    ]
+    name: Annotated[str, Field(min_length=1, max_length=255)]
+    address: Annotated[str, Field(min_length=1, max_length=500)]
+    contact_number: Optional[str] = Field(default=None, max_length=20)
+
+    # Change these to allow plain float/decimal without strict decimal_places
+    # during serialization from the DB.
+    latitude: Optional[Decimal] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[Decimal] = Field(default=None, ge=-180, le=180)
 
 
 class StoreCreate(StoreBase):
     """Payload required to create a new Store."""
 
 
-class StoreRead(StoreBase):
-    """Store representation returned by the API.
+class StoreHoursBase(BaseModel):
+    day_of_week: int  # 0=Monday, 6=Sunday
+    open_time: time
+    close_time: time
+    is_closed: bool = False
 
-    The ``services`` field is populated only when the relationship is
-    eagerly loaded (selectinload); it defaults to an empty list otherwise.
-    """
 
-    model_config = ConfigDict(from_attributes=True)
+class StoreHoursCreate(StoreHoursBase):
+    pass
 
+
+# --- StoreHours ---
+class StoreHoursRead(StoreHoursBase, AuditSchema):
     id: UUID
-    created_at: datetime
-    updated_at: datetime
-    services: List[ServiceRead] = Field(default_factory=list)
+    store_id: UUID
 
 
-class StoreWithDistance(StoreRead):
+# --- Service ---
+class ServiceRead(ServiceBase, AuditSchema):
+    id: UUID
+    store_id: UUID
+
+
+# --- Store ---
+class StoreRead(StoreBase, AuditSchema):
+    id: UUID
+    services: List[ServiceRead] | None = Field(default_factory=list)
+
+
+class StoreWithDistance(StoreRead, AuditSchema):
     """Store representation that includes the calculated distance from a search point."""
 
     distance: float = Field(..., description="Distance in kilometers")
