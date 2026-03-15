@@ -2,86 +2,198 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient
 
+# --- FIXTURES FOR ISOLATION ---
+
+
+@pytest.fixture
+async def sample_store(client_fixture: AsyncClient):
+    payload = {
+        "name": "Test Store",
+        "address": "Kochi",
+        "contact_number": "123",
+        "latitude": 10.0,
+        "longitude": 76.0,
+    }
+    resp = await client_fixture.post("/api/v1/owner/stores/", json=payload)
+    return resp.json()
+
+
+@pytest.fixture
+async def sample_hours(client_fixture: AsyncClient, sample_store):
+    """Sets 9 AM - 8 PM hours for every day of the week to ensure test stability."""
+    created_hours = []
+    for day in range(7):
+        payload = {
+            "day_of_week": day,
+            "open_time": "09:00:00",
+            "close_time": "20:00:00",
+        }
+        resp = await client_fixture.post(
+            f"/api/v1/owner/stores/{sample_store['id']}/store-hours", json=payload
+        )
+        created_hours.append(resp.json())
+    return created_hours
+
+
+@pytest.fixture
+async def sample_service(client_fixture: AsyncClient, sample_store):
+    payload = {"name": "Haircut", "price": 500.0, "duration_minutes": 30}
+    resp = await client_fixture.post(
+        f"/api/v1/owner/stores/{sample_store['id']}/services", json=payload
+    )
+    return resp.json()
+
+
+# --- CONFLICT ENGINE TESTS ---
+
 
 @pytest.mark.asyncio
-async def test_complete_booking_flow(client_fixture: AsyncClient):
-    """
-    Dynamic ID Flow:
-    1. [Owner] Create a Store
-    2. [Owner] Set Operating Hours
-    3. [Owner] Create a Service
-    4. [User]  Book that Service
-    """
-
-    # 1. [OWNER] CREATE DYNAMIC STORE
-    store_payload = {
-        "name": "Test Dynamic Saloon",
-        "address": "Kochi",
-        "contact_number": "9876543210",
-        "latitude": 10.01,
-        "longitude": 76.34,
-    }
-    # Hits the Owner endpoint
-    store_resp = await client_fixture.post("/api/v1/owner/stores/", json=store_payload)
-    assert store_resp.status_code == 201
-    store_id = store_resp.json()["id"]
-
-    # 1.5 [OWNER] SET OPERATING HOURS
-    booking_date = datetime.now(timezone.utc) + timedelta(days=2)
-    target_weekday = booking_date.weekday()
-
-    hours_payload = {
-        "day_of_week": target_weekday,
-        "open_time": "09:00:00",
-        "close_time": "20:00:00",
-    }
-
-    # Hits the Owner endpoint
-    hours_resp = await client_fixture.post(
-        f"/api/v1/owner/stores/{store_id}/store-hours", json=hours_payload
+async def test_create_booking_success(
+    client_fixture: AsyncClient, sample_store, sample_hours, sample_service
+):
+    """Test #1: Standard successful booking path."""
+    # Book for tomorrow at 12:00 PM
+    start_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+        hour=12, minute=0, second=0, microsecond=0
     )
-    assert hours_resp.status_code == 201, f"Hours setup failed: {hours_resp.text}"
 
-    # 2. [OWNER] CREATE DYNAMIC SERVICE
-    service_payload = {
-        "name": "Dynamic Haircut",
-        "description": "Test Service",
-        "price": 500.0,
-        "duration_minutes": 30,
-    }
-    # Hits the Owner endpoint
-    service_resp = await client_fixture.post(
-        f"/api/v1/owner/stores/{store_id}/services", json=service_payload
-    )
-    assert service_resp.status_code == 201
-    service_id = service_resp.json()["id"]
-
-    # 3. [USER] ATTEMPT VALID BOOKING
-    # Ensure it's the same day we set the hours for
-    start_time = booking_date.replace(hour=10, minute=0, second=0, microsecond=0)
-
-    booking_payload = {
-        "store_id": store_id,
-        "service_id": service_id,
-        "customer_name": "Dynamic Alice",
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "Alice",
         "start_time": start_time.isoformat(),
     }
 
-    # Hits the User endpoint
-    booking_resp = await client_fixture.post(
-        "/api/v1/users/bookings/", json=booking_payload
+    resp = await client_fixture.post("/api/v1/users/bookings/", json=payload)
+    assert resp.status_code == 201
+
+    data = resp.json()
+    actual_end = datetime.fromisoformat(data["end_time"]).replace(tzinfo=timezone.utc)
+    expected_end = start_time + timedelta(minutes=sample_service["duration_minutes"])
+    assert actual_end == expected_end
+
+
+@pytest.mark.asyncio
+async def test_prevent_double_booking(
+    client_fixture: AsyncClient, sample_store, sample_hours, sample_service
+):
+    """Test #2: Block two users from booking the exact same slot."""
+    start_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+        hour=14, minute=0, second=0, microsecond=0
     )
 
-    # ASSERTIONS
-    assert booking_resp.status_code == 201, f"Booking failed: {booking_resp.text}"
-    data = booking_resp.json()
-    assert data["store_id"] == store_id
-    assert data["service_id"] == service_id
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "User 1",
+        "start_time": start_time.isoformat(),
+    }
 
-    # Verify calculated end_time (30 mins later)
-    # Note: Using 'Z' to match the likely Pydantic/ISO output format
-    actual_end = datetime.fromisoformat(data["end_time"]).replace(tzinfo=timezone.utc)
-    # 2. Ensure your expected calculation is also UTC aware
-    expected_end = (start_time + timedelta(minutes=30)).replace(tzinfo=timezone.utc)
+    # First booking succeeds
+    await client_fixture.post("/api/v1/users/bookings/", json=payload)
 
-    assert actual_end == expected_end
+    # Second booking at same time fails
+    payload["customer_name"] = "User 2"
+    resp = await client_fixture.post("/api/v1/users/bookings/", json=payload)
+
+    assert resp.status_code == 400
+    assert "already booked" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_prevent_booking_outside_hours(
+    client_fixture: AsyncClient, sample_store, sample_hours, sample_service
+):
+    """Test #3: Block booking if time falls outside 09:00 - 20:00."""
+    # Try to book at 11:00 PM (23:00)
+    start_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+        hour=23, minute=0, second=0, microsecond=0
+    )
+
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "Night Owl",
+        "start_time": start_time.isoformat(),
+    }
+
+    resp = await client_fixture.post("/api/v1/users/bookings/", json=payload)
+    assert resp.status_code == 400
+    assert "outside operating hours" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_prevent_booking_on_unconfigured_day(
+    client_fixture: AsyncClient, sample_store, sample_service
+):
+    """Test #4: Block booking if the owner hasn't set hours for that day yet."""
+    # Note: We do NOT use the 'sample_hours' fixture here to simulate a fresh store
+    start_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+        hour=10, minute=0, second=0, microsecond=0
+    )
+
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "Early Bird",
+        "start_time": start_time.isoformat(),
+    }
+
+    resp = await client_fixture.post("/api/v1/users/bookings/", json=payload)
+    assert resp.status_code == 400
+    assert "not configured" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_booking_slots_discovery(
+    client_fixture: AsyncClient, sample_store, sample_hours, sample_service
+):
+    """Test #5: Verify available slots generation and overlap filtering."""
+
+    # 1. Target exactly tomorrow
+    tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+    target_date_str = tomorrow.strftime("%Y-%m-%d")
+
+    # Book a single 30m slot at 10:00 (10:00 -> 10:30)
+    booking_start = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "Blocker User",
+        "start_time": booking_start.isoformat(),
+    }
+    await client_fixture.post("/api/v1/users/bookings/", json=payload)
+
+    # 2. Fetch Slots
+    url = f"/api/v1/users/bookings/store/{sample_store['id']}/slots"
+    params = {"service_id": sample_service["id"], "target_date": target_date_str}
+    resp = await client_fixture.get(url, params=params)
+
+    assert resp.status_code == 200
+    slots = resp.json()
+
+    # We expect hours from 09:00 to 20:00 (11 hours) -> 22 possible 30m slots.
+    # Minus 1 blocked slot (10:00) -> 21
+    assert len(slots) == 21
+
+    # Check that 09:30 exists, but 10:00 does NOT
+    start_times = [s["start_time"] for s in slots]
+
+    expected_930 = (
+        tomorrow.replace(hour=9, minute=30, second=0, microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+    expected_1000 = booking_start.isoformat().replace("+00:00", "Z")
+
+    assert expected_930 in start_times
+    assert expected_1000 not in start_times
+
+    # Verify the last valid slot ends AT closing time.
+    # Open 0900 -> Close 2000. Service=30m. Last possible slot should start at 19:30.
+    last_slot_expected = (
+        tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+    assert start_times[-1] == last_slot_expected

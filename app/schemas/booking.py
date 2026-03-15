@@ -39,3 +39,9 @@ class BookingRead(BookingBase):
     status: str
     created_at: datetime
     updated_at: datetime
+
+
+class AvailableSlot(BaseModel):
+    """Represents a single available 30-minute booking slot."""
+
+    start_time: datetime
