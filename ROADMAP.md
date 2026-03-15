@@ -1,6 +1,6 @@
 # 🗺️ Saloon Manager Roadmap
 
-A high-concurrency backend built with FastAPI, PostgreSQL, and Docker, specifically designed for local saloon marketplaces.
+A high-concurrency full-stack application built with FastAPI and Next.js, designed for local saloon marketplaces.
 
 ---
 
@@ -9,44 +9,46 @@ A high-concurrency backend built with FastAPI, PostgreSQL, and Docker, specifica
 - [x] **Containerization**: Docker-compose setup for PostgreSQL.
 - [x] **Database Architecture**: SQLAlchemy 2.0 with Async drivers and Audit Mixins.
 - [x] **Migrations**: Alembic integration for version-controlled schema changes.
-- [x] **Geospatial Logic**: Store proximity search (Haversine formula) for Kochi/Kakkanad.
-- [x] **Data Relations**: Store -> Services (One-to-Many) relationship implementation.
-- [x] **Seeding System**: Automated scripts to populate local test environments.
-- [x] **Quality Assurance**: Unit testing suite with `pytest` for booking logic.
+- [x] **Geospatial Logic**: Store proximity search (Haversine formula).
+- [x] **Data Relations**: Store -> Services (One-to-Many) relationship.
+- [x] **Seeding System**: Automated scripts for local test environments.
+- [x] **Quality Assurance**: Unit testing suite with `pytest` for core logic.
 
 ---
 
-## 🚧 PHASE 2: The Booking Life Cycle (In Progress)
+## 🎨 PHASE 2: Frontend Discovery & Integration (Active)
+- [x] **Environment Setup**: Next.js + Tailwind CSS project initialization.
+- [x] **Store Discovery UI**: Grid view of saloons with dynamic routing.
+- [x] **Service Selection**: Interactive "Menu" view per saloon.
+- [x] **Time-Picker Engine**: Visual grid fetching real-time slots from backend.
+- [x] **Handshake**: Successful API integration between Next.js and FastAPI.
+- [ ] **UX Feedback**: Success/Error "Toasts" and Modal confirmations.
+- [ ] **Booking Summary**: Post-booking confirmation screen for customers.
+
+---
+
+## 🚧 PHASE 3: The Booking Life Cycle (In Progress)
 - [x] **Availability Logic**: Validation against Store Opening Hours.
-- [x] **Concurrency Control**: SQL-level overlap prevention for time slots.
-- [x] **Service Integration**: Automatic `end_time` calculation based on service duration.
-- [ ] **Booking Management**: Implement `PATCH` (Reschedule) and `DELETE` (Cancel) endpoints.
-- [ ] **Status Workflow**: Transitions from `Pending` -> `Confirmed` -> `Completed`.
+- [x] **Slot Discovery Engine**: `GET /slots` logic with 30-min window slicing.
+- [x] **Concurrency Control**: SQL-level overlap prevention.
+- [x] **Service Integration**: Automatic `end_time` calculation.
+- [ ] **Status Workflow (PINNED)**: Transitions (Pending -> Confirmed -> Completed).
+- [ ] **Cancellation Policy (PINNED)**: 2-hour buffer logic for user cancellations.
+- [ ] **Owner Dashboard UI**: Visualizing daily/weekly schedules for the salon owner.
 
 ---
 
-## 🚀 PHASE 3: Identity & Security (Next)
+## 🚀 PHASE 4: Identity & Security (Next)
 - [ ] **Authentication**: JWT-based Auth (FastAPI Users or Custom OAuth2).
 - [ ] **RBAC (Role-Based Access Control)**:
-    - **Customer**: Can book and view their own history.
-    - **Store Owner**: Can manage their own services and view dashboard.
-    - **Admin**: Can verify new saloons.
-- [ ] **CORS Configuration**: Secure the API for frontend (Next.js) integration.
+    - **Customer**: View personal booking history.
+    - **Store Owner**: Manage services and view private dashboard.
+- [ ] **CORS Configuration**: Finalize production security headers.
 
 ---
 
-## 💎 PHASE 4: Professional Polish (Future)
-- [ ] **Background Tasks**: Email/WhatsApp notifications for booking confirmations (using Celery/Redis).
-- [ ] **Analytics**: Monthly revenue reports for store owners.
-- [ ] **Image Support**: Upload saloon and service photos to S3/Cloudinary.
-- [ ] **Deployment**: CI/CD pipeline to Vercel/GCP.
-
----
-
-## 🛠️ Tech Stack Recap
-- **Language**: Python 3.12+
-- **Framework**: FastAPI (Asynchronous)
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy (AsyncSession)
-- **Validation**: Pydantic v2
-- **Tooling**: `uv`, `ruff`, `alembic`, `pytest`
+## 💎 PHASE 5: Professional Polish (Future)
+- [ ] **Background Tasks**: Email/WhatsApp notifications via Celery/Redis.
+- [ ] **Analytics**: Monthly revenue and busy-hour reports for owners.
+- [ ] **Image Support**: Upload photos via S3/Cloudinary.
+- [ ] **Deployment**: CI/CD pipeline and cloud hosting.
