@@ -19,3 +19,9 @@ app.add_middleware(
 
 # This one line includes everything!
 app.include_router(api_router, prefix="/api/v1")
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Cloud Run."""
+    return {"status": "ok", "service": "saloon-manager"}
