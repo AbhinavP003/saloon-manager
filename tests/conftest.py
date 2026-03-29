@@ -17,7 +17,11 @@ engine = create_async_engine(
 )
 
 TestingSessionLocal = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 
@@ -64,3 +68,69 @@ async def db_session():
 @pytest.fixture(autouse=True)
 def override_get_db(db_session):
     app.dependency_overrides[get_db] = lambda: db_session
+
+
+# --- AUTH FIXTURES ---
+
+
+@pytest.fixture
+async def owner_token(client_fixture: AsyncClient):
+    from app.models.user import UserRole
+
+    email = f"owner_{asyncio.get_event_loop().time()}@saloon.com"
+    password = "password"
+    await client_fixture.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "full_name": "Saloon Owner",
+            "password": password,
+            "role": UserRole.STORE_OWNER,
+        },
+    )
+    resp = await client_fixture.post(
+        "/api/v1/auth/login", data={"username": email, "password": password}
+    )
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def admin_token(client_fixture: AsyncClient):
+    from app.models.user import UserRole
+
+    email = f"admin_{asyncio.get_event_loop().time()}@saloon.com"
+    password = "password"
+    await client_fixture.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "full_name": "System Admin",
+            "password": password,
+            "role": UserRole.ADMIN,
+        },
+    )
+    resp = await client_fixture.post(
+        "/api/v1/auth/login", data={"username": email, "password": password}
+    )
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def user_token(client_fixture: AsyncClient):
+    from app.models.user import UserRole
+
+    email = f"user_{asyncio.get_event_loop().time()}@saloon.com"
+    password = "password"
+    await client_fixture.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "full_name": "Standard User",
+            "password": password,
+            "role": UserRole.CUSTOMER,
+        },
+    )
+    resp = await client_fixture.post(
+        "/api/v1/auth/login", data={"username": email, "password": password}
+    )
+    return resp.json()["access_token"]

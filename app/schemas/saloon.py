@@ -35,6 +35,7 @@ class ServiceBase(BaseModel):
         ),
     ]
     price: Annotated[Decimal, Field(gt=0, decimal_places=2, examples=[250.00])]
+
     duration_minutes: Annotated[int, Field(ge=5, examples=[30])]
 
 
@@ -85,14 +86,30 @@ class StoreHoursRead(StoreHoursBase, AuditSchema):
 
 
 # --- Service ---
-class ServiceRead(ServiceBase, AuditSchema):
+class ServiceShort(ServiceBase, AuditSchema):
+    """Short version of Service for nesting."""
+
     id: UUID
+
+
+class ServiceRead(ServiceShort):
+    """Full version of Service."""
+
+    pass
+
     store_id: UUID
 
 
 # --- Store ---
-class StoreRead(StoreBase, AuditSchema):
+class StoreShort(StoreBase, AuditSchema):
+    """Short version for nesting."""
+
     id: UUID
+
+
+class StoreRead(StoreShort):
+    """Full version with detail."""
+
     services: List[ServiceRead] | None = Field(default_factory=list)
 
 

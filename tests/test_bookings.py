@@ -6,7 +6,7 @@ from httpx import AsyncClient
 
 
 @pytest.fixture
-async def sample_store(client_fixture: AsyncClient):
+async def sample_store(client_fixture: AsyncClient, owner_token):
     payload = {
         "name": "Test Store",
         "address": "Kochi",
@@ -14,12 +14,16 @@ async def sample_store(client_fixture: AsyncClient):
         "latitude": 10.0,
         "longitude": 76.0,
     }
-    resp = await client_fixture.post("/api/v1/owner/stores/", json=payload)
+    resp = await client_fixture.post(
+        "/api/v1/owner/stores/",
+        json=payload,
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
     return resp.json()
 
 
 @pytest.fixture
-async def sample_hours(client_fixture: AsyncClient, sample_store):
+async def sample_hours(client_fixture: AsyncClient, sample_store, owner_token):
     """Sets 9 AM - 8 PM hours for every day of the week to ensure test stability."""
     created_hours = []
     for day in range(7):
@@ -29,17 +33,21 @@ async def sample_hours(client_fixture: AsyncClient, sample_store):
             "close_time": "20:00:00",
         }
         resp = await client_fixture.post(
-            f"/api/v1/owner/stores/{sample_store['id']}/store-hours", json=payload
+            f"/api/v1/owner/stores/{sample_store['id']}/store-hours",
+            json=payload,
+            headers={"Authorization": f"Bearer {owner_token}"},
         )
         created_hours.append(resp.json())
     return created_hours
 
 
 @pytest.fixture
-async def sample_service(client_fixture: AsyncClient, sample_store):
+async def sample_service(client_fixture: AsyncClient, sample_store, owner_token):
     payload = {"name": "Haircut", "price": 500.0, "duration_minutes": 30}
     resp = await client_fixture.post(
-        f"/api/v1/owner/stores/{sample_store['id']}/services", json=payload
+        f"/api/v1/owner/stores/{sample_store['id']}/services",
+        json=payload,
+        headers={"Authorization": f"Bearer {owner_token}"},
     )
     return resp.json()
 

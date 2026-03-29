@@ -6,6 +6,7 @@ import { Calendar, Clock, ChevronRight, Loader2, CheckCircle2, User, AlertCircle
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { fetchAvailableSlots, createBooking } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
 interface TimePickerProps {
   serviceId: string;
@@ -28,6 +29,13 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.full_name && !customerName) {
+      setCustomerName(user.full_name);
+    }
+  }, [user]);
 
   // Generate 14 days of options
   const dateOptions = Array.from({ length: 14 }).map((_, i) => addDays(today, i));
@@ -189,7 +197,8 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
             placeholder="Enter your name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
+            disabled={!!user}
+            className={`w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500/50 transition-colors ${user ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
         </div>
       </div>

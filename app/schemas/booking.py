@@ -9,6 +9,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.booking import BookingStatus
+from app.schemas.common import AuditSchema
+from app.schemas.saloon import StoreShort, ServiceShort
 
 
 class BookingBase(BaseModel):
@@ -31,7 +33,7 @@ class BookingCreate(BookingBase):
     ]
 
 
-class BookingRead(BookingBase):
+class BookingRead(BookingBase, AuditSchema):
     """Booking representation returned by the API."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -39,8 +41,10 @@ class BookingRead(BookingBase):
     id: UUID
     end_time: datetime
     status: BookingStatus
-    created_at: datetime
-    updated_at: datetime
+
+    # Nested Relationships
+    store: Optional[StoreShort] = None
+    service: Optional[ServiceShort] = None
 
 
 class StatusUpdate(BaseModel):

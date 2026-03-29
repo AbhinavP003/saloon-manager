@@ -1,35 +1,11 @@
-import Link from "next/link";
-import { ArrowRight, CalendarDays, Scissors, User } from "lucide-react";
+import { ArrowRight, CalendarDays, Scissors } from "lucide-react";
 import StoreList from "@/components/StoreList";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-50 selection:bg-indigo-500/30">
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-neutral-950/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <Scissors className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">SaloonManager</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-            <Link href="#services" className="hover:text-white transition-colors">Services</Link>
-            <Link href="#locations" className="hover:text-white transition-colors">Locations</Link>
-            <Link href="#about" className="hover:text-white transition-colors">About</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-white transition-colors text-neutral-400">
-              <User className="w-4 h-4" />
-              Sign In
-            </button>
-            <button className="h-10 px-5 rounded-full bg-white text-black text-sm font-medium hover:bg-neutral-200 transition-colors">
-              Book Now
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <main className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden flex flex-col items-center min-h-screen justify-center text-center px-6">

@@ -1,22 +1,30 @@
 from datetime import date, datetime, timedelta, timezone
+from typing import Annotated, Optional
+
+
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
-from app.models.booking import Booking
+from app.api.deps import get_db, get_current_user, get_current_user_optional
+
+from app.models.booking import Booking, BookingStatus
 from app.models.saloon import Service, Store, StoreHours
 from app.schemas.booking import BookingCreate, BookingRead, AvailableSlot
+from app.models.user import User
 
 router = APIRouter(tags=["Users - Bookings"])
 
 
 @router.post("/", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
 async def create_booking(
-    payload: BookingCreate, db: AsyncSession = Depends(get_db)
+    payload: BookingCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[Optional[User], Depends(get_current_user_optional)] = None,
 ) -> Booking:
-    """Customers use this to book a slot."""
+    """Customers use this to book a slot. Links to user account if logged in."""
     # 1. Verify store exists
     store = await db.get(Store, payload.store_id)
     if not store:
@@ -62,11 +70,20 @@ async def create_booking(
         raise HTTPException(status_code=400, detail="Time slot is already booked.")
 
     # 6. Create booking
-    booking = Booking(**payload.model_dump(), end_time=end_time)
+    booking_data = payload.model_dump()
+    if current_user:
+        booking_data["user_id"] = current_user.id
+
+    booking = Booking(**booking_data, end_time=end_time)
     db.add(booking)
     await db.commit()
-    await db.refresh(booking)
-    return booking
+
+    result = await db.execute(
+        select(Booking)
+        .where(Booking.id == booking.id)
+        .options(selectinload(Booking.store), selectinload(Booking.service))
+    )
+    return result.scalar_one()
 
 
 @router.get(
@@ -165,3 +182,63 @@ async def get_booking(booking_id: UUID, db: AsyncSession = Depends(get_db)) -> B
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found.")
     return booking
+
+
+@router.patch("/{booking_id}/cancel", response_model=BookingRead)
+async def cancel_booking(
+    booking_id: UUID, db: AsyncSession = Depends(get_db)
+) -> Booking:
+    """Customers use this to cancel their own booking (outside 2-hour window)."""
+    booking = await db.get(Booking, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+
+    # 1. No change needed if already cancelled
+    if booking.status == BookingStatus.CANCELLED:
+        return booking
+
+    # 2. Protect Terminal States
+    if booking.status in {BookingStatus.COMPLETED, BookingStatus.NO_SHOW}:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot cancel a booking that is already {booking.status}.",
+        )
+
+    # 3. Time Gate (2hr window)
+    now = datetime.now(timezone.utc)
+    start_time = (
+        booking.start_time.replace(tzinfo=timezone.utc)
+        if booking.start_time.tzinfo is None
+        else booking.start_time
+    )
+
+    if start_time < now + timedelta(hours=2):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cancellations within 2 hours must be handled via phone with the saloon.",
+        )
+
+    # 4. Apply Cancellation
+    booking.status = BookingStatus.CANCELLED
+    await db.commit()
+
+    result = await db.execute(
+        select(Booking)
+        .where(Booking.id == booking.id)
+        .options(selectinload(Booking.store), selectinload(Booking.service))
+    )
+    return result.scalar_one()
+
+
+@router.get("/", response_model=list[BookingRead])
+async def list_my_bookings(
+    db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
+) -> list[Booking]:
+    """Retrieves all appointments linked to the authenticated user."""
+    result = await db.execute(
+        select(Booking)
+        .where(Booking.user_id == current_user.id)
+        .options(selectinload(Booking.store), selectinload(Booking.service))
+        .order_by(Booking.start_time.desc())
+    )
+    return list(result.scalars().all())
