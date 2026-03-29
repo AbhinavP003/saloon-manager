@@ -29,6 +29,9 @@ jobs:
         run: uv sync
 
       - name: Run tests
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///./test.db"
+          SECRET_KEY: "dummy_test_secret_key"
         run: uv run pytest tests/ -v
 
   # -------------------------------------------------------
