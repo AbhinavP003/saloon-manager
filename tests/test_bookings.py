@@ -156,7 +156,7 @@ async def test_prevent_booking_on_unconfigured_day(
 async def test_booking_slots_discovery(
     client_fixture: AsyncClient, sample_store, sample_hours, sample_service
 ):
-    """Test #5: Verify available slots generation and overlap filtering."""
+    """Test #5: Verify available slots generation and overlap filterings."""
 
     # 1. Target exactly tomorrow
     tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
