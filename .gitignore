@@ -9,3 +9,5 @@ wheels/
 .agent
 # Virtual environments
 .venv
+gcp-secrets.txt
+sa-key.json
