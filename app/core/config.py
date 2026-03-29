@@ -17,9 +17,25 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Saloon Manager"
 
     # ------------------------------------------------------------------
+    # Security & Auth
+    # ------------------------------------------------------------------
+    # Generate a strong key for production (e.g. openssl rand -hex 32)
+    SECRET_KEY: str = "saloon-top-secret-locally-changed-later"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # CORS (Separated by comma)
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
+    # ------------------------------------------------------------------
     # Database
     # ------------------------------------------------------------------
     DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@host:5432/db
+
+    # ------------------------------------------------------------------
+    # Server
+    # ------------------------------------------------------------------
+    PORT: int = 8080  # Cloud Run injects this env var
 
     model_config = SettingsConfigDict(
         env_file=".env",

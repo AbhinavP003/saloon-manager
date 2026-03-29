@@ -27,23 +27,23 @@ A high-concurrency full-stack application built with FastAPI and Next.js, design
 
 ---
 
-## 🚧 PHASE 3: The Booking Life Cycle (In Progress)
+## ✅ PHASE 3: The Booking Life Cycle (Completed)
 - [x] **Availability Logic**: Validation against Store Opening Hours.
 - [x] **Slot Discovery Engine**: `GET /slots` logic with 30-min window slicing.
 - [x] **Concurrency Control**: SQL-level overlap prevention.
 - [x] **Service Integration**: Automatic `end_time` calculation.
-- [ ] **Status Workflow (PINNED)**: Transitions (Pending -> Confirmed -> Completed).
-- [ ] **Cancellation Policy (PINNED)**: 2-hour buffer logic for user cancellations.
-- [ ] **Owner Dashboard UI**: Visualizing daily/weekly schedules for the salon owner.
+- [x] **Status Workflow**: Backend logic & transitions (Pending -> Confirmed -> Completed).
+- [x] **Cancellation Policy**: 2-hour buffer logic for user cancellations.
+- [x] **Owner Dashboard UI**: Premium visual dashboard for salon owners.
 
 ---
 
-## 🚀 PHASE 4: Identity & Security (Next)
-- [ ] **Authentication**: JWT-based Auth (FastAPI Users or Custom OAuth2).
-- [ ] **RBAC (Role-Based Access Control)**:
-    - **Customer**: View personal booking history.
-    - **Store Owner**: Manage services and view private dashboard.
-- [ ] **CORS Configuration**: Finalize production security headers.
+## ✅ PHASE 4: Identity & Security (Completed)
+- [x] **User Models & RBAC**: Database schema and role-based logic.
+- [x] **Authentication Core**: JWT-based token issuance and verification backend.
+- [x] **Frontend Auth Integration**: Login/Register pages and protected routes.
+- [x] **Account Management**: Customer profile and booking history views.
+- [x] **CORS Configuration**: Finalize production security headers.
 
 ---
 

@@ -8,11 +8,14 @@ Async database engine, session factory, and shared base classes.
   model that inherits from it (including Base-derived models).
 """
 
+from datetime import datetime, timezone
+
 from uuid import UUID
 from collections.abc import AsyncGenerator
 from typing import Optional
 
-from sqlalchemy import DateTime, Uuid, func
+
+from sqlalchemy import DateTime, Uuid
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -89,17 +92,18 @@ class AuditMixin:
             ...
     """
 
-    created_at: Mapped[Optional[str]] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-    updated_at: Mapped[Optional[str]] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+
     created_by: Mapped[Optional[UUID]] = mapped_column(
         Uuid(),
         nullable=True,

@@ -13,8 +13,11 @@ AuditMixin (which contributes created_at, updated_at, created_by, updated_by).
 import uuid
 from decimal import Decimal
 from datetime import time as dt_time
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid, Boolean, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -65,6 +68,15 @@ class Store(AuditMixin, Base):
         back_populates="store",
         cascade="all, delete-orphan",
     )
+
+    # Owner (added in Phase 4)
+    owner_id: Mapped[Optional[UUID]] = mapped_column(
+        Uuid(),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    owner: Mapped[Optional["User"]] = relationship("User", backref="stores")
 
 
 # ---------------------------------------------------------------------------

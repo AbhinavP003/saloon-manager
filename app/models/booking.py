@@ -2,10 +2,12 @@
 ORM models for the booking domain.
 """
 
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from app.models.saloon import Store, Service
+    from app.models.user import User
 
 import uuid
 from datetime import datetime
@@ -63,6 +65,15 @@ class Booking(AuditMixin, Base):
     status: Mapped[BookingStatus] = mapped_column(
         String(50), nullable=False, default=BookingStatus.PENDING
     )
+
+    # Customer identity (added in Phase 4)
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        Uuid(),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    user: Mapped[Optional["User"]] = relationship("User", backref="bookings")
 
     # Relationships
     store: Mapped["Store"] = relationship("Store", backref="bookings")

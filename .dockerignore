@@ -1,0 +1,32 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+.pytest_cache
+.ruff_cache
+
+# Frontend (has its own Dockerfile)
+frontend/
+
+# Tests (not needed in production)
+tests/
+
+# Dev files
+.env
+.agent
+*.md
+docs/
+scripts/
+*.db
+preview.db
+init_db.py
+populate_preview.py
+
+# IDE
+.vscode/
+.idea/
