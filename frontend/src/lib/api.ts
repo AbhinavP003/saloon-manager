@@ -47,3 +47,12 @@ export async function createBooking(payload: {
   }
   return res.json();
 }
+
+export async function fetchBooking(id: string) {
+  const res = await fetch(`${API_URL}/users/bookings/${id}`);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error("Failed to fetch booking details");
+  }
+  return res.json();
+}

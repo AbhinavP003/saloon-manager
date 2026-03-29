@@ -156,3 +156,12 @@ async def get_available_slots(
         current_time += interval
 
     return available_slots
+
+
+@router.get("/{booking_id}", response_model=BookingRead)
+async def get_booking(booking_id: UUID, db: AsyncSession = Depends(get_db)) -> Booking:
+    """Fetch details of a specific booking."""
+    booking = await db.get(Booking, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    return booking

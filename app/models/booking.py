@@ -9,12 +9,23 @@ if TYPE_CHECKING:
 
 import uuid
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base
+
+
+class BookingStatus(str, Enum):
+    """Enforce strict status transitions for bookings."""
+
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
+    NO_SHOW = "no-show"
 
 
 class Booking(AuditMixin, Base):
@@ -49,7 +60,9 @@ class Booking(AuditMixin, Base):
         DateTime(timezone=True), nullable=False
     )
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+    status: Mapped[BookingStatus] = mapped_column(
+        String(50), nullable=False, default=BookingStatus.PENDING
+    )
 
     # Relationships
     store: Mapped["Store"] = relationship("Store", backref="bookings")

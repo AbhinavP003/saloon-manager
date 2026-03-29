@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { format, addDays, startOfToday, parseISO } from "date-fns";
 import { Calendar, Clock, ChevronRight, Loader2, CheckCircle2, User, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { fetchAvailableSlots, createBooking } from "@/lib/api";
 
 interface TimePickerProps {
@@ -17,6 +19,7 @@ interface Slot {
 }
 
 export default function TimePicker({ serviceId, storeId, durationMinutes }: TimePickerProps) {
+  const router = useRouter();
   const today = startOfToday();
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
@@ -25,7 +28,6 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState<any | null>(null);
 
   // Generate 14 days of options
   const dateOptions = Array.from({ length: 14 }).map((_, i) => addDays(today, i));
@@ -34,7 +36,6 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
     setIsLoading(true);
     setSelectedSlot(null);
     setError(null);
-    setBookingSuccess(null);
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     
@@ -59,6 +60,8 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
     setIsSubmitting(true);
     setError(null);
 
+    const toastId = toast.loading("Confirming your booking...");
+
     try {
       const result = await createBooking({
         store_id: storeId,
@@ -66,38 +69,23 @@ export default function TimePicker({ serviceId, storeId, durationMinutes }: Time
         customer_name: customerName,
         start_time: selectedSlot.toISOString(),
       });
-      setBookingSuccess(result);
+      
+      toast.success("Booking confirmed!", {
+        id: toastId,
+        description: `We'll see you on ${format(selectedSlot, 'MMMM do')} at ${format(selectedSlot, 'h:mm a')}`,
+      });
+
+      // Navigate to confirmation page
+      router.push(`/bookings/${result.id}/confirmation`);
     } catch (err: any) {
+      toast.error(err.message || "Failed to create booking", {
+        id: toastId,
+      });
       setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (bookingSuccess) {
-    return (
-      <div className="bg-neutral-900 border border-indigo-500/30 rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center gap-6 shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center">
-          <CheckCircle2 className="w-10 h-10 text-indigo-400" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h2>
-          <p className="text-neutral-400">
-            Thanks {bookingSuccess.customer_name}, we've scheduled your session for{" "}
-            <span className="text-white font-medium">
-              {format(parseISO(bookingSuccess.start_time), 'MMMM do')} at {format(parseISO(bookingSuccess.start_time), 'h:mm a')}
-            </span>.
-          </p>
-        </div>
-        <button 
-          onClick={() => setBookingSuccess(null)}
-          className="w-full h-12 rounded-xl bg-white text-black font-semibold hover:bg-neutral-200 transition-all"
-        >
-          Book Another
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6 w-full max-w-md flex flex-col gap-6 shadow-2xl">

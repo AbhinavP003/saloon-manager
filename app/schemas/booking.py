@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.booking import BookingStatus
+
 
 class BookingBase(BaseModel):
     """Fields shared across all Booking schema variants."""
@@ -23,9 +25,9 @@ class BookingBase(BaseModel):
 class BookingCreate(BookingBase):
     """Payload required to create a new Booking."""
 
-    # Optional explicitly provided status on create, though it defaults to pending
     status: Annotated[
-        Optional[str], Field(default="pending", max_length=50, examples=["pending"])
+        Optional[BookingStatus],
+        Field(default=BookingStatus.PENDING, examples=[BookingStatus.PENDING]),
     ]
 
 
@@ -36,9 +38,15 @@ class BookingRead(BookingBase):
 
     id: UUID
     end_time: datetime
-    status: str
+    status: BookingStatus
     created_at: datetime
     updated_at: datetime
+
+
+class StatusUpdate(BaseModel):
+    """Schema for updating a booking status."""
+
+    status: BookingStatus
 
 
 class AvailableSlot(BaseModel):
