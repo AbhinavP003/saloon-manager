@@ -92,7 +92,7 @@ Add these in **Settings → Secrets and variables → Actions**:
 | `SECRET_KEY` | Generate with `openssl rand -hex 32` |
 | `CLOUD_SQL_CONNECTION` | `PROJECT:REGION:saloon-db` |
 | `BACKEND_URL` | Set after first backend deploy (e.g. `https://saloon-backend-xxx.a.run.app`) |
-| `FRONTEND_URL` | Frontend Cloud Run URL for CORS (e.g. `https://saloon-frontend-xxx.a.run.app`) |
+| `FRONTEND_URL` | Frontend Cloud Run URL for CORS (e.g. `https://saloon-frontend-xxx.a.run.app`). **Recommended** — if unset, deploy defaults to `http://localhost:3000` |
 
 After the first backend deploy, update `BACKEND_URL` so the frontend build bakes in the correct API URL via `NEXT_PUBLIC_API_URL`.
 
