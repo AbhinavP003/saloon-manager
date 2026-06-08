@@ -60,13 +60,22 @@ async def test_owner_can_fetch_monthly_analytics(
             "start_time": month,
         },
     )
+    assert booking_resp.status_code == 201
     booking = booking_resp.json()
 
-    await client_fixture.patch(
+    confirm_resp = await client_fixture.patch(
+        f"/api/v1/owner/bookings/{booking['id']}/status",
+        json={"status": "confirmed"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert confirm_resp.status_code == 200
+
+    complete_resp = await client_fixture.patch(
         f"/api/v1/owner/bookings/{booking['id']}/status",
         json={"status": "completed"},
         headers={"Authorization": f"Bearer {owner_token}"},
     )
+    assert complete_resp.status_code == 200
 
     resp = await client_fixture.get(
         f"/api/v1/owner/stores/{store['id']}/analytics?month=2026-06",
