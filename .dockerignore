@@ -22,6 +22,7 @@ tests/
 *.md
 docs/
 scripts/
+!scripts/start.sh
 *.db
 preview.db
 init_db.py
