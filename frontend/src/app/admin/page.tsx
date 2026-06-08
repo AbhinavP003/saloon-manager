@@ -20,9 +20,10 @@ import {
   Trash2,
   Save
 } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
-const ADMIN_TOKEN = "saloon-admin-secret";
-const API_URL = "http://localhost:8000/api/v1";
+const ADMIN_TOKEN =
+  process.env.NEXT_PUBLIC_ADMIN_TOKEN || "saloon-admin-secret";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 

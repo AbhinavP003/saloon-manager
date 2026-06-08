@@ -73,6 +73,7 @@ jobs:
             --allow-unauthenticated \
             --set-env-vars "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
             --set-env-vars "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
+            --set-env-vars "BACKEND_CORS_ORIGINS=${{ secrets.FRONTEND_URL }}" \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION }}
 
   # -------------------------------------------------------

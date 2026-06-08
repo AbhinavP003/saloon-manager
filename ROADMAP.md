@@ -16,14 +16,14 @@ A high-concurrency full-stack application built with FastAPI and Next.js, design
 
 ---
 
-## 🎨 PHASE 2: Frontend Discovery & Integration (Active)
+## ✅ PHASE 2: Frontend Discovery & Integration (Completed)
 - [x] **Environment Setup**: Next.js + Tailwind CSS project initialization.
 - [x] **Store Discovery UI**: Grid view of saloons with dynamic routing.
 - [x] **Service Selection**: Interactive "Menu" view per saloon.
 - [x] **Time-Picker Engine**: Visual grid fetching real-time slots from backend.
 - [x] **Handshake**: Successful API integration between Next.js and FastAPI.
-- [ ] **UX Feedback**: Success/Error "Toasts" and Modal confirmations.
-- [ ] **Booking Summary**: Post-booking confirmation screen for customers.
+- [x] **UX Feedback**: Success/Error toasts via `sonner` across auth, booking, and owner flows.
+- [x] **Booking Summary**: Post-booking confirmation screen at `/bookings/[id]/confirmation`.
 
 ---
 
@@ -47,8 +47,8 @@ A high-concurrency full-stack application built with FastAPI and Next.js, design
 
 ---
 
-## 💎 PHASE 5: Professional Polish (Future)
+## 💎 PHASE 5: Professional Polish (In Progress)
 - [ ] **Background Tasks**: Email/WhatsApp notifications via Celery/Redis.
-- [ ] **Analytics**: Monthly revenue and busy-hour reports for owners.
+- [x] **Analytics**: Monthly revenue and busy-hour reports for owners.
 - [ ] **Image Support**: Upload photos via S3/Cloudinary.
-- [ ] **Deployment**: CI/CD pipeline and cloud hosting.
+- [x] **Deployment**: CI/CD pipeline (GitHub Actions → GCP Cloud Run). Live deploy pending secrets/migrations — see [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md).

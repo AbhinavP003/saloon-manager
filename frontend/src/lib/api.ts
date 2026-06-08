@@ -1,4 +1,8 @@
-const API_URL = "http://localhost:8000/api/v1";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+  "http://localhost:8000";
+
+export const API_URL = `${API_BASE}/api/v1`;
 
 // Auth Helpers
 export const getStoredToken = () => {
@@ -175,6 +179,23 @@ export async function fetchMyBookings() {
     },
   });
   if (!res.ok) throw new Error("Failed to fetch your bookings");
+  return res.json();
+}
+
+export async function fetchStoreAnalytics(storeId: string, month: string) {
+  const token = getStoredToken();
+  const res = await fetch(
+    `${API_URL}/owner/stores/${storeId}/analytics?month=${month}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Failed to fetch store analytics");
+  }
   return res.json();
 }
 

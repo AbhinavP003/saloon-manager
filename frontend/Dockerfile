@@ -14,8 +14,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set the backend API URL (override at deploy time)
-ENV NEXT_PUBLIC_API_URL=http://localhost:8000
+# Backend API URL baked in at build time (override via --build-arg in CI)
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
 

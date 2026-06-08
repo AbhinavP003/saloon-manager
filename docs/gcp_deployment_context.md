@@ -13,13 +13,10 @@
   - **Frontend**: https://saloon-frontend-lj4j5kxljq-el.a.run.app
   - **Backend**: https://saloon-backend-lj4j5kxljq-el.a.run.app
 
-## Pending Action (Next Conversation)
-The infrastructure is successfully deployed, but the newly provisioned Cloud SQL database is **completely empty** (no schema).
+## Pending Action
 
-**The immediate next step is to run Database Migrations against the Production Database.**
+The infrastructure is deployed, but the Cloud SQL database may be **empty** (no schema) until migrations run.
 
-### Technical Requirements for the Next Step:
-1. Connect to the Cloud SQL instance locally (typically via the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy)).
-2. Set the local `DATABASE_URL` environment variable to point to the proxy port using the production credentials.
-3. Run `alembic upgrade head` to build the schemas (Users, Stores, Bookings, Services, etc.).
-4. Optionally, run the `populate_preview.py` script against production to seed some initial services, hours, or admin accounts for beta testers.
+**Next step:** Follow [GCP_DEPLOYMENT.md](./GCP_DEPLOYMENT.md) §6 to run `alembic upgrade head` against production.
+
+**Frontend fix (2026-06):** The frontend now reads `NEXT_PUBLIC_API_URL` at build time. Re-deploy the frontend after setting the `BACKEND_URL` GitHub secret so API calls target the live backend instead of `localhost:8000`.

@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { 
+  fetchStoreAnalytics,
   fetchStoreBookings, 
   fetchStoreDetails, 
   updateBookingStatus 
@@ -39,16 +40,20 @@ export default function OwnerDashboardPage({
   const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "confirmed">("all");
+  const [analytics, setAnalytics] = useState<any>(null);
+  const currentMonth = format(new Date(), "yyyy-MM");
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [storeData, bookingsData] = await Promise.all([
+        const [storeData, bookingsData, analyticsData] = await Promise.all([
           fetchStoreDetails(id),
-          fetchStoreBookings(id)
+          fetchStoreBookings(id),
+          fetchStoreAnalytics(id, currentMonth),
         ]);
         setStore(storeData);
         setBookings(bookingsData);
+        setAnalytics(analyticsData);
       } catch (err: any) {
         toast.error("Failed to load dashboard data");
       } finally {
@@ -164,6 +169,71 @@ export default function OwnerDashboardPage({
             </motion.div>
           ))}
         </div>
+
+        {/* Monthly Analytics */}
+        {analytics && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-3xl bg-neutral-900 border border-white/5"
+            >
+              <div className="text-sm text-neutral-500 font-medium mb-2">
+                Revenue — {analytics.month}
+              </div>
+              <div className="text-3xl font-bold text-purple-400">
+                ₹{Number(analytics.monthly_revenue).toFixed(2)}
+              </div>
+              <div className="text-xs text-neutral-500 mt-2">
+                {analytics.completed_bookings} completed bookings
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-2 p-6 rounded-3xl bg-neutral-900 border border-white/5"
+            >
+              <div className="text-sm text-neutral-500 font-medium mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Busiest Hours
+              </div>
+              {analytics.busy_hours?.length > 0 ? (
+                <div className="space-y-3">
+                  {analytics.busy_hours.slice(0, 5).map((slot: any) => {
+                    const maxCount = analytics.busy_hours[0].count;
+                    const width = Math.round((slot.count / maxCount) * 100);
+                    const hourLabel = format(
+                      new Date(2000, 0, 1, slot.hour, 0),
+                      "h a"
+                    );
+                    return (
+                      <div key={slot.hour} className="flex items-center gap-4">
+                        <span className="text-xs font-bold text-neutral-400 w-14">
+                          {hourLabel}
+                        </span>
+                        <div className="flex-1 h-2 bg-neutral-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-500 rounded-full"
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-neutral-500 w-8 text-right">
+                          {slot.count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-500 italic">
+                  No completed bookings this month yet.
+                </p>
+              )}
+            </motion.div>
+          </div>
+        )}
 
         {/* Schedule Section */}
         <div className="bg-neutral-900/50 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-xl">

@@ -46,7 +46,7 @@ To prevent last-minute losses for the salon:
 
 ## 6. Implementation Checklist
 1. [x] Define `BookingStatus(str, Enum)` in Models.
-2. [ ] Add `status_updated_at` and `status_reason` (optional) to Database.
-3. [ ] Implement `validate_transition(old, new)` logic utility.
-4. [ ] Create `PATCH /owner/bookings/{id}/status` endpoint.
-5. [ ] Create `PATCH /users/bookings/{id}/cancel` endpoint with Time-Gate.
+2. [ ] Add `status_updated_at` and `status_reason` (optional) to Database — deferred to Phase 5.
+3. [x] Implement transition validation (inline in `PATCH /owner/bookings/{id}/status`).
+4. [x] Create `PATCH /owner/bookings/{id}/status` endpoint.
+5. [x] Create `PATCH /users/bookings/{id}/cancel` endpoint with Time-Gate.

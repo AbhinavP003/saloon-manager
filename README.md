@@ -19,11 +19,14 @@ For a deep dive into our development journey and technical decisions, please ref
 ### [🏗️ Architecture Decision Records (ADRs)](./docs/decisions/)
 *Rationale behind technical choices, major transitions, and design patterns.*
 
+### [☁️ GCP Deployment Guide](./docs/GCP_DEPLOYMENT.md)
+*Step-by-step instructions for deploying to Cloud Run with GitHub Actions.*
+
 ---
 
 ## 🛠️ Tech Stack
 - **Backend**: FastAPI (Python 3.12)
-- **Database**: SQLAlchemy (Async) with SQLite (Testing) and PostgreSQL (Planned)
+- **Database**: SQLAlchemy (Async) with PostgreSQL (local via Docker Compose, production via Cloud SQL) and SQLite (testing)
 - **Security**: OAuth2 with JWT, Pydantic-based Role Management
 - **Management**: `uv` for dependencies, `alembic` for migrations
 

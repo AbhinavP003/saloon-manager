@@ -1,7 +1,7 @@
 # ADR 0002: Deployment Strategy — GCP Cloud Run (Beta)
 
 ## Status
-**Proposed** (Pending GCP Account Creation)
+**Accepted** — CI/CD pipeline implemented; production deploy requires GitHub secrets and DB migrations (see [GCP_DEPLOYMENT.md](../GCP_DEPLOYMENT.md)).
 
 ## Date
 2026-03-29

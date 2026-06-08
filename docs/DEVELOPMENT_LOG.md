@@ -1,5 +1,13 @@
 # Development Log
 
+## 2026-06-08: Production Wiring & Owner Analytics
+- **Docs**: Marked Phase 2 complete in ROADMAP; synced phase_3 checklist and tests README; added [GCP_DEPLOYMENT.md](./GCP_DEPLOYMENT.md).
+- **Frontend**: `NEXT_PUBLIC_API_URL` now drives all API calls; admin page shares `API_URL` from `api.ts`.
+- **Backend**: Owner analytics endpoint (`GET /owner/stores/{id}/analytics`) for monthly revenue and busy-hour reports.
+- **Deploy**: CORS origins parse from comma-separated env; GitHub Actions sets `BACKEND_CORS_ORIGINS` from `FRONTEND_URL` secret.
+
+---
+
 ## 2026-03-29: Security Migration & Test Stabilization
 - **Feature**: Completed Phase 4 (Identity & Security).
 - **Core Changes**:
