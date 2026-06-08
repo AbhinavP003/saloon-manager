@@ -8,6 +8,8 @@ sourced exclusively from the .env file — no hardcoded secrets.
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.debug_log import debug_log
+
 
 class Settings(BaseSettings):
     """Central settings object for the Saloon Manager application."""
@@ -41,6 +43,14 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@host:5432/db
 
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def ensure_asyncpg_driver(cls, value: str) -> str:
+        """Cloud SQL secrets often use postgresql:// — async engine needs +asyncpg."""
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return value
+
     # ------------------------------------------------------------------
     # Server
     # ------------------------------------------------------------------
@@ -54,4 +64,31 @@ class Settings(BaseSettings):
 
 
 # Single application-wide instance — import this everywhere.
-settings = Settings()
+# #region agent log
+debug_log("config.py:settings", "loading_settings_start", {}, "H2")
+# #endregion
+try:
+    settings = Settings()
+    # #region agent log
+    debug_log(
+        "config.py:settings",
+        "loading_settings_ok",
+        {
+            "has_database_url": bool(settings.DATABASE_URL),
+            "database_scheme": settings.DATABASE_URL.split(":", 1)[0],
+            "cors_count": len(settings.BACKEND_CORS_ORIGINS),
+            "port": settings.PORT,
+        },
+        "H2",
+    )
+    # #endregion
+except Exception as exc:
+    # #region agent log
+    debug_log(
+        "config.py:settings",
+        "loading_settings_failed",
+        {"error_type": type(exc).__name__, "error": str(exc)},
+        "H2",
+    )
+    # #endregion
+    raise

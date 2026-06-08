@@ -70,10 +70,22 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
         run: |
-          # Use env-vars-file — multiple --set-env-vars flags overwrite each other,
-          # leaving only the last var set and crashing the app on startup.
-          printf 'DATABASE_URL: "%s"\nSECRET_KEY: "%s"\nBACKEND_CORS_ORIGINS: "%s"\n' \
-            "$DATABASE_URL" "$SECRET_KEY" "$FRONTEND_URL" > /tmp/env.yaml
+          # Write env-vars-file safely (printf can mangle URLs with % or quotes).
+          python3 <<'PY'
+          import os
+          pairs = [
+              ("DATABASE_URL", os.environ.get("DATABASE_URL", "")),
+              ("SECRET_KEY", os.environ.get("SECRET_KEY", "")),
+              ("BACKEND_CORS_ORIGINS", os.environ.get("FRONTEND_URL", "")),
+          ]
+          for name, value in pairs:
+              if not value:
+                  raise SystemExit(f"{name} is empty — check GitHub secrets")
+          with open("/tmp/env.yaml", "w", encoding="utf-8") as f:
+              for name, value in pairs:
+                  escaped = value.replace("'", "''")
+                  f.write(f"{name}: '{escaped}'\n")
+          PY
           gcloud run deploy saloon-backend \
             --image ${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
