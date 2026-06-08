@@ -36,9 +36,13 @@ COPY --from=builder /app/migrations /app/migrations
 
 # Put the venv's bin directory on PATH
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
 
 # Cloud Run injects PORT env variable (default 8080)
 ENV PORT=8080
 
+COPY scripts/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Run uvicorn in production mode (no --reload)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["/app/start.sh"]

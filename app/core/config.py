@@ -43,12 +43,23 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@host:5432/db
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def strip_database_url(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
     @field_validator("DATABASE_URL", mode="after")
     @classmethod
     def ensure_asyncpg_driver(cls, value: str) -> str:
-        """Cloud SQL secrets often use postgresql:// — async engine needs +asyncpg."""
+        """Cloud SQL secrets often use postgres:// or postgresql:// — need +asyncpg."""
+        if value.startswith("sqlite"):
+            return value
+        if value.startswith("postgresql+asyncpg://"):
+            return value
+        if value.startswith("postgres://"):
+            return "postgresql+asyncpg://" + value[len("postgres://") :]
         if value.startswith("postgresql://"):
-            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return "postgresql+asyncpg://" + value[len("postgresql://") :]
         return value
 
     # ------------------------------------------------------------------

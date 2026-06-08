@@ -88,7 +88,7 @@ Add these in **Settings → Secrets and variables → Actions**:
 |--------|-------|
 | `GCP_PROJECT_ID` | Your GCP project ID |
 | `GCP_SA_KEY` | Full JSON contents of `gcp-sa-key.json` |
-| `DATABASE_URL` | `postgresql+asyncpg://saloon_user:PASSWORD@/saloon?host=/cloudsql/PROJECT:REGION:saloon-db` |
+| `DATABASE_URL` | `postgresql+asyncpg://saloon_user:PASSWORD@/saloon?host=/cloudsql/PROJECT:REGION:saloon-db` (also accepts `postgres://` or `postgresql://` — auto-normalized to `postgresql+asyncpg://`) |
 | `SECRET_KEY` | Generate with `openssl rand -hex 32` |
 | `CLOUD_SQL_CONNECTION` | `PROJECT:REGION:saloon-db` |
 | `BACKEND_URL` | Set after first backend deploy (e.g. `https://saloon-backend-xxx.a.run.app`) |
