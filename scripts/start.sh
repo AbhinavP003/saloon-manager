@@ -8,10 +8,11 @@ echo "[startup] PORT=${PORT}"
 echo "[startup] DATABASE_URL set=$([ -n "$DATABASE_URL" ] && echo yes || echo no)"
 echo "[startup] SECRET_KEY set=$([ -n "$SECRET_KEY" ] && echo yes || echo no)"
 
-python -c "
-from app.main import app
-print('[startup] app import succeeded')
-" || {
+if [ -n "$DATABASE_URL" ]; then
+  echo "[startup] DATABASE_URL scheme=$(printf '%s' "$DATABASE_URL" | cut -d: -f1)"
+fi
+
+python -c "from app.main import app; print('[startup] app import succeeded')" || {
   echo "[startup] FATAL: app import failed"
   exit 1
 }
