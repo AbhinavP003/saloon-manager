@@ -65,15 +65,21 @@ jobs:
           docker push "${{ env.BACKEND_IMAGE }}:latest"
 
       - name: Deploy backend to Cloud Run
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
         run: |
+          # Use env-vars-file — multiple --set-env-vars flags overwrite each other,
+          # leaving only the last var set and crashing the app on startup.
+          printf 'DATABASE_URL: "%s"\nSECRET_KEY: "%s"\nBACKEND_CORS_ORIGINS: "%s"\n' \
+            "$DATABASE_URL" "$SECRET_KEY" "$FRONTEND_URL" > /tmp/env.yaml
           gcloud run deploy saloon-backend \
             --image ${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            --set-env-vars "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
-            --set-env-vars "BACKEND_CORS_ORIGINS=${{ secrets.FRONTEND_URL }}" \
+            --env-vars-file /tmp/env.yaml \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION }}
 
   # -------------------------------------------------------

@@ -146,6 +146,7 @@ After pushing to `main`:
 
 | Symptom | Fix |
 |---------|-----|
+| Container failed to start on PORT 8080 | Ensure all env vars are set together (`DATABASE_URL`, `SECRET_KEY`, `BACKEND_CORS_ORIGINS`). Do **not** pass multiple `--set-env-vars` flags — gcloud keeps only the last one. Use `--env-vars-file` instead. |
 | Frontend calls `localhost:8000` | Rebuild frontend with `BACKEND_URL` secret set; `NEXT_PUBLIC_API_URL` is baked at build time |
 | CORS errors | Add frontend URL to `BACKEND_CORS_ORIGINS` on backend |
 | 500 errors on API | Run `alembic upgrade head` against production DB |
