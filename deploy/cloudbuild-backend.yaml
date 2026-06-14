@@ -1,0 +1,10 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-backend:v1
+      - .
+
+images:
+  - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-backend:v1

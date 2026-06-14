@@ -11,3 +11,6 @@ wheels/
 .venv
 gcp-secrets.txt
 sa-key.json
+deploy/secrets.worksheet
+deploy/backend-env.yaml
+deploy/backend-env-v2.yaml

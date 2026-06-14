@@ -96,6 +96,25 @@ Add these in **Settings → Secrets and variables → Actions**:
 
 After the first backend deploy, update `BACKEND_URL` so the frontend build bakes in the correct API URL via `NEXT_PUBLIC_API_URL`.
 
+## 5b. Cloud Run runtime service account
+
+The backend connects to Cloud SQL at runtime. Create a dedicated service account (one-time):
+
+```bash
+gcloud iam service-accounts create saloon-run-sa \
+  --display-name="Saloon Cloud Run Runtime"
+
+gcloud projects add-iam-policy-binding saloon-manager-beta-5640 \
+  --member="serviceAccount:saloon-run-sa@saloon-manager-beta-5640.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+```
+
+CI and manual deploys pass `--service-account saloon-run-sa@PROJECT.iam.gserviceaccount.com` when deploying `saloon-backend`.
+
+## 5c. Manual fresh deploy (recommended first time)
+
+See [deploy/README.md](../deploy/README.md) for Cloud Build scripts that do not require local Docker. Use `--env-vars-file` with all env vars set together.
+
 ## 6. Run Database Migrations (Production)
 
 Cloud SQL starts empty. Run migrations before the app can serve traffic.
@@ -148,10 +167,10 @@ After pushing to `main`:
 |---------|-----|
 | Container failed to start on PORT 8080 | Ensure all env vars are set together (`DATABASE_URL`, `SECRET_KEY`, `BACKEND_CORS_ORIGINS`). Do **not** pass multiple `--set-env-vars` flags — gcloud keeps only the last one. Use `--env-vars-file` instead. |
 | Frontend calls `localhost:8000` | Rebuild frontend with `BACKEND_URL` secret set; `NEXT_PUBLIC_API_URL` is baked at build time |
-| CORS errors | Add frontend URL to `BACKEND_CORS_ORIGINS` on backend |
+| CORS errors | Add frontend URL to `BACKEND_CORS_ORIGINS` on backend (comma-separated string) |
 | 500 errors on API | Run `alembic upgrade head` against production DB |
 | Auth failures | Ensure `SECRET_KEY` is set consistently on backend |
 
 ## Current Infrastructure Notes
 
-See [`docs/gcp_deployment_context.md`](./gcp_deployment_context.md) for the live beta environment (project `saloon-manager-beta-5640`) and pending migration step.
+See [`docs/gcp_deployment_context.md`](./gcp_deployment_context.md) for the live beta environment and GitHub secret values.

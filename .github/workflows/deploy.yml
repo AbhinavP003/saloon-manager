@@ -64,6 +64,32 @@ jobs:
           docker push "${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
           docker push "${{ env.BACKEND_IMAGE }}:latest"
 
+      - name: Smoke test backend container startup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          docker run -d --name smoke-backend \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e SECRET_KEY="$SECRET_KEY" \
+            -e BACKEND_CORS_ORIGINS="http://localhost:3000" \
+            -e PORT=8080 \
+            -p 8080:8080 \
+            "${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8080/health > /dev/null; then
+              echo "Smoke test passed"
+              docker logs smoke-backend
+              docker rm -f smoke-backend
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Smoke test failed — container logs:"
+          docker logs smoke-backend
+          docker rm -f smoke-backend
+          exit 1
+
       - name: Deploy backend to Cloud Run
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -83,6 +109,25 @@ jobs:
               sys.exit("DATABASE_URL is empty — check GitHub secrets")
           if not secret_key:
               sys.exit("SECRET_KEY is empty — check GitHub secrets")
+
+          def normalize_db_url(url: str) -> str:
+              if url.startswith("sqlite"):
+                  return url
+              if url.startswith("postgresql+asyncpg://"):
+                  return url
+              if url.startswith("postgres://"):
+                  return "postgresql+asyncpg://" + url[len("postgres://") :]
+              if url.startswith("postgresql://"):
+                  return "postgresql+asyncpg://" + url[len("postgresql://") :]
+              return url
+
+          normalized_db_url = normalize_db_url(database_url)
+          if not normalized_db_url.startswith("postgresql+asyncpg://"):
+              sys.exit(
+                  "DATABASE_URL must normalize to postgresql+asyncpg:// "
+                  f"(got scheme: {normalized_db_url.split(':', 1)[0]})"
+              )
+
           if not frontend_url:
               frontend_url = "http://localhost:3000"
               print(
@@ -106,6 +151,8 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
+            --port 8080 \
+            --service-account saloon-run-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --env-vars-file /tmp/env.yaml \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION }}
 

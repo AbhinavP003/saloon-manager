@@ -1,0 +1,4 @@
+# Copy to deploy/backend-env.yaml and fill in real values (gitignored).
+DATABASE_URL: 'postgresql+asyncpg://saloon_user:PASSWORD@/saloon?host=/cloudsql/saloon-manager-beta-5640:asia-south1:saloon-db'
+SECRET_KEY: 'your-openssl-generated-key'
+BACKEND_CORS_ORIGINS: 'http://localhost:3000'

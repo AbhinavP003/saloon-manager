@@ -28,15 +28,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # CORS — comma-separated in env (e.g. http://localhost:3000,https://frontend.run.app)
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
-        if isinstance(value, str):
-            origins = [origin.strip() for origin in value.split(",") if origin.strip()]
-            return origins or ["http://localhost:3000"]
-        return value
+    @property
+    def cors_origins(self) -> list[str]:
+        origins = [
+            origin.strip()
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
+        return origins or ["http://localhost:3000"]
 
     # ------------------------------------------------------------------
     # Database
@@ -87,7 +88,7 @@ try:
         {
             "has_database_url": bool(settings.DATABASE_URL),
             "database_scheme": settings.DATABASE_URL.split(":", 1)[0],
-            "cors_count": len(settings.BACKEND_CORS_ORIGINS),
+            "cors_count": len(settings.cors_origins),
             "port": settings.PORT,
         },
         "H2",

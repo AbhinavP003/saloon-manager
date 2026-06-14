@@ -38,16 +38,32 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
-    op.add_column("bookings", sa.Column("user_id", sa.Uuid(), nullable=True))
-    op.create_index(op.f("ix_bookings_user_id"), "bookings", ["user_id"], unique=False)
-    op.create_foreign_key(
-        None, "bookings", "users", ["user_id"], ["id"], ondelete="SET NULL"
-    )
-    op.add_column("stores", sa.Column("owner_id", sa.Uuid(), nullable=True))
-    op.create_index(op.f("ix_stores_owner_id"), "stores", ["owner_id"], unique=False)
-    op.create_foreign_key(
-        None, "stores", "users", ["owner_id"], ["id"], ondelete="SET NULL"
-    )
+
+    with op.batch_alter_table("bookings", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("user_id", sa.Uuid(), nullable=True))
+        batch_op.create_index(
+            batch_op.f("ix_bookings_user_id"), ["user_id"], unique=False
+        )
+        batch_op.create_foreign_key(
+            "fk_bookings_user_id_users",
+            "users",
+            ["user_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
+
+    with op.batch_alter_table("stores", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("owner_id", sa.Uuid(), nullable=True))
+        batch_op.create_index(
+            batch_op.f("ix_stores_owner_id"), ["owner_id"], unique=False
+        )
+        batch_op.create_foreign_key(
+            "fk_stores_owner_id_users",
+            "users",
+            ["owner_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
     # ### end Alembic commands ###
 
 

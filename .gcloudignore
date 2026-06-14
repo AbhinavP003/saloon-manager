@@ -1,0 +1,36 @@
+# gcloud builds submit ignore — keep upload small
+.git
+.gitignore
+.github
+.cursor
+.agent
+.vscode
+.idea
+
+# Python
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+*.db
+preview.db
+saloon.db
+debug-*.log
+
+# Node
+frontend/node_modules
+frontend/.next
+
+# Docs and local deploy secrets
+docs/
+*.md
+deploy/backend-env.yaml
+deploy/backend-env-v2.yaml
+deploy/secrets.worksheet
+gcp-secrets.txt
+sa-key.json
+
+# Tests (not needed for image build)
+tests/

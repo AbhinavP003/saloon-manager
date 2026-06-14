@@ -1,0 +1,15 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=${_BACKEND_URL}
+      - -t
+      - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-frontend:v1
+      - ./frontend
+
+images:
+  - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-frontend:v1
+
+substitutions:
+  _BACKEND_URL: https://saloon-backend-247064166190.asia-south1.run.app
