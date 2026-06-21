@@ -82,6 +82,32 @@ async def test_create_booking_success(
 
 
 @pytest.mark.asyncio
+async def test_get_booking_by_id(
+    client_fixture: AsyncClient, sample_store, sample_hours, sample_service
+):
+    """GET /users/bookings/{id} must eager-load nested store/service (async-safe)."""
+    start_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+        hour=11, minute=0, second=0, microsecond=0
+    )
+    payload = {
+        "store_id": sample_store["id"],
+        "service_id": sample_service["id"],
+        "customer_name": "Alice",
+        "start_time": start_time.isoformat(),
+    }
+    create_resp = await client_fixture.post("/api/v1/users/bookings/", json=payload)
+    assert create_resp.status_code == 201
+    booking_id = create_resp.json()["id"]
+
+    get_resp = await client_fixture.get(f"/api/v1/users/bookings/{booking_id}")
+    assert get_resp.status_code == 200
+    data = get_resp.json()
+    assert data["id"] == booking_id
+    assert data["store"]["id"] == sample_store["id"]
+    assert data["service"]["id"] == sample_service["id"]
+
+
+@pytest.mark.asyncio
 async def test_prevent_double_booking(
     client_fixture: AsyncClient, sample_store, sample_hours, sample_service
 ):

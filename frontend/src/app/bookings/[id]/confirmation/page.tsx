@@ -40,8 +40,12 @@ export default function BookingConfirmationPage({
         }
         setBooking(bookingData);
 
-        const storeData = await fetchStoreDetails(bookingData.store_id);
-        setStore(storeData);
+        if (bookingData.store) {
+          setStore(bookingData.store);
+        } else {
+          const storeData = await fetchStoreDetails(bookingData.store_id);
+          setStore(storeData);
+        }
         setIsLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -81,7 +85,9 @@ export default function BookingConfirmationPage({
     );
   }
 
-  const service = store?.services?.find((s: any) => s.id === booking.service_id);
+  const service =
+    booking.service ??
+    store?.services?.find((s: any) => s.id === booking.service_id);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-50 selection:bg-indigo-500/30 overflow-x-hidden">
