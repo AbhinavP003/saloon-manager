@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import { scrollToSection } from "@/lib/scroll";
 import { 
   Scissors, 
   User as UserIcon, 
@@ -16,6 +18,14 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  const handleExploreClick = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      scrollToSection("locations");
+    }
+  };
 
   return (
     <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-neutral-950/50 backdrop-blur-xl">
@@ -30,7 +40,7 @@ export default function Navbar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-          <Link href="/#locations" className="hover:text-white transition-colors">Explore</Link>
+          <Link href="/#locations" onClick={handleExploreClick} className="hover:text-white transition-colors">Explore</Link>
           <Link href="/bookings" className="hover:text-white transition-colors">My Bookings</Link>
           <Link href="/about" className="hover:text-white transition-colors">About</Link>
         </div>

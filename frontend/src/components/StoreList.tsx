@@ -52,7 +52,7 @@ export default function StoreList() {
   }, []);
 
   return (
-    <section id="locations" className="py-24 px-6 max-w-7xl mx-auto w-full relative z-20 bg-neutral-950">
+    <section id="locations" className="scroll-mt-24 py-24 px-6 max-w-7xl mx-auto w-full relative z-20 bg-neutral-950">
       <div className="flex items-end justify-between mb-12">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white mb-2">Featured Saloons</h2>

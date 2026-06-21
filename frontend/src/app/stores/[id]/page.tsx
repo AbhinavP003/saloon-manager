@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, MapPin, Scissors, Star, Timer, Loader2 } from "lucide
 import { StoreRead } from "@/components/StoreList";
 import TimePicker from "@/components/TimePicker";
 import { fetchStoreDetails } from "@/lib/api";
+import { scrollToSection } from "@/lib/scroll";
 
 export default function StoreDetailPage({
   params,
@@ -39,6 +40,11 @@ export default function StoreDetailPage({
         setIsLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (isLoading || !store || window.location.hash !== "#services") return;
+    requestAnimationFrame(() => scrollToSection("services"));
+  }, [isLoading, store]);
 
   if (isLoading) {
     return (
@@ -112,7 +118,7 @@ export default function StoreDetailPage({
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20 flex flex-col lg:flex-row gap-12">
         
         {/* Left Column: Services */}
-        <div className="flex-1">
+        <div id="services" className="scroll-mt-24 flex-1">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
               <Scissors className="w-5 h-5 text-indigo-400" />
