@@ -30,7 +30,7 @@ export default function Navbar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-          <Link href="/" className="hover:text-white transition-colors">Explore</Link>
+          <Link href="/#locations" className="hover:text-white transition-colors">Explore</Link>
           <Link href="/bookings" className="hover:text-white transition-colors">My Bookings</Link>
           <Link href="/about" className="hover:text-white transition-colors">About</Link>
         </div>
