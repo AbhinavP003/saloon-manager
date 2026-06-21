@@ -3,8 +3,11 @@ steps:
     args:
       - build
       - -t
-      - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-backend:v1
+      - ${_IMAGE}
       - .
 
 images:
-  - asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-backend:v1
+  - ${_IMAGE}
+
+substitutions:
+  _IMAGE: asia-south1-docker.pkg.dev/saloon-manager-beta-5640/saloon-repo/saloon-backend:gce

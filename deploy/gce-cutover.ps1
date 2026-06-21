@@ -10,6 +10,7 @@ param(
     [string]$VmIp,
     [switch]$VerifyOnly,
     [switch]$Teardown,
+    [switch]$ConfirmDelete,
     [string]$Project = "saloon-manager-beta-5640",
     [string]$Region = "asia-south1"
 )
@@ -44,9 +45,8 @@ if ($VerifyOnly -or -not $Teardown) {
 Write-Host ""
 Write-Host "=== Teardown billable services (Cloud SQL + Cloud Run) ==="
 Write-Host "Project: $Project  Region: $Region"
-$confirm = Read-Host "Type DELETE to confirm teardown of saloon-db, saloon-backend, saloon-frontend"
-if ($confirm -ne "DELETE") {
-    Write-Host "Aborted."
+if (-not $ConfirmDelete) {
+    Write-Host "Aborted — pass -ConfirmDelete to delete without prompt."
     exit 1
 }
 
