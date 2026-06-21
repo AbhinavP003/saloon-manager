@@ -62,6 +62,7 @@ if [ -z "$DEPLOY_ENV" ]; then
 fi
 
 REPO_URL="$(get_metadata repo-url)"
+REPO_URL="${REPO_URL%% *}"
 [ -z "$REPO_URL" ] && REPO_URL="https://github.com/AbhinavP003/saloon-manager.git"
 
 APP_DIR="/opt/saloon-manager"
@@ -71,6 +72,16 @@ cd "$APP_DIR"
 
 mkdir -p deploy
 printf '%s\n' "$DEPLOY_ENV" > deploy/.env
+
+# Docker creates deploy/nginx.conf as a directory if the file is missing during first up.
+if [ -d deploy/nginx.conf ]; then rm -rf deploy/nginx.conf; fi
+if [ ! -f deploy/nginx.conf ]; then
+  echo "[bootstrap] deploy/nginx.conf missing after clone"
+  ls -la deploy/ || true
+  exit 1
+fi
+
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env down --remove-orphans 2>/dev/null || true
 
 export COMPOSE_PARALLEL_LIMIT=1
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env pull

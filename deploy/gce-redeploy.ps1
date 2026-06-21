@@ -32,10 +32,13 @@ Write-Step "Ensure VM exists"
 Write-Step "Grant Artifact Registry read to Compute Engine SA"
 $projectNumber = (& gcloud projects describe $Project --format="value(projectNumber)").Trim()
 $computeSa = "${projectNumber}-compute@developer.gserviceaccount.com"
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 & gcloud projects add-iam-policy-binding $Project `
     --member="serviceAccount:$computeSa" `
     --role="roles/artifactregistry.reader" `
-    --quiet 2>$null | Out-Null
+    --quiet 2>&1 | Out-Null
+$ErrorActionPreference = $prevEap
 
 if (-not $SkipBuild) {
     Write-Step "Cloud Build backend image"
@@ -71,8 +74,12 @@ $bootstrap = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot "gce-bootstr
 [System.IO.File]::WriteAllText($BootstrapLf, $bootstrap)
 
 & gcloud compute instances add-metadata $VmName --zone $Zone --project $Project `
-    --metadata-from-file=startup-script=$BootstrapLf,deploy-env=$EnvBootstrap `
-    --metadata=repo-url=https://github.com/AbhinavP003/saloon-manager.git,force-redeploy=1
+    --metadata-from-file=startup-script=$BootstrapLf `
+    --metadata-from-file=deploy-env=$EnvBootstrap `
+    --metadata=repo-url=https://github.com/AbhinavP003/saloon-manager.git
+
+& gcloud compute instances add-metadata $VmName --zone $Zone --project $Project `
+    --metadata=force-redeploy=1
 
 & gcloud compute instances reset $VmName --zone $Zone --project $Project --quiet
 
@@ -96,13 +103,13 @@ if (-not $healthy) {
 }
 
 Write-Step "Verify flows"
-$home = Invoke-WebRequest -Uri $BaseUrl -UseBasicParsing -TimeoutSec 20
-Write-Host "  home: $($home.StatusCode)"
+$homeResp = Invoke-WebRequest -Uri $BaseUrl -UseBasicParsing -TimeoutSec 20
+Write-Host "  home: $($homeResp.StatusCode)"
 $stores = Invoke-WebRequest -Uri "$BaseUrl/api/v1/users/stores/" -UseBasicParsing -TimeoutSec 20
 Write-Host "  stores API: $($stores.StatusCode), bytes=$($stores.Content.Length)"
-if ($stores.Content.Length -lt 10) { throw "Stores list empty — seed may have failed" }
+if ($stores.Content.Length -lt 10) { throw "Stores list empty - seed may have failed" }
 
-$loginBody = "username=owner@saloon.com&password=password"
+$loginBody = 'username=owner@saloon.com&password=password'
 $login = Invoke-WebRequest -Uri "$BaseUrl/api/v1/auth/login" -Method POST `
     -ContentType "application/x-www-form-urlencoded" -Body $loginBody -UseBasicParsing -TimeoutSec 20
 Write-Host "  owner login: $($login.StatusCode)"
@@ -113,7 +120,8 @@ if ($Teardown) {
     }
     Write-Step "Teardown Cloud SQL and Cloud Run"
     & gcloud sql instances delete saloon-db --project $Project --quiet
-    & gcloud run services delete saloon-backend saloon-frontend --region $Region --project $Project --quiet
+    & gcloud run services delete saloon-backend --region $Region --project $Project --quiet
+    & gcloud run services delete saloon-frontend --region $Region --project $Project --quiet
     Write-Host "Billable services deleted."
 }
 

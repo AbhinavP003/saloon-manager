@@ -51,7 +51,8 @@ if (-not $ConfirmDelete) {
 }
 
 gcloud sql instances delete saloon-db --project $Project --quiet
-gcloud run services delete saloon-backend saloon-frontend --region $Region --project $Project --quiet
+gcloud run services delete saloon-backend --region $Region --project $Project --quiet
+gcloud run services delete saloon-frontend --region $Region --project $Project --quiet
 
 Write-Host ""
 Write-Host "=== Cutover complete ==="
