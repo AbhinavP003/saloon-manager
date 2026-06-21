@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="after")
     @classmethod
     def ensure_asyncpg_driver(cls, value: str) -> str:
-        """Cloud SQL secrets often use postgres:// or postgresql:// — need +asyncpg."""
+        """Normalize postgres:// URLs and ensure asyncpg driver for hosted Postgres (e.g. Neon)."""
         if value.startswith("sqlite"):
             return value
         if value.startswith("postgresql+asyncpg://"):

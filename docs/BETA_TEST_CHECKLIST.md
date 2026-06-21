@@ -56,4 +56,6 @@ $env:API_BASE_URL = "https://saloon-backend-lj4j5kxljq-el.a.run.app"
 python populate_preview.py
 ```
 
+Database is Neon Postgres — see [DATABASE_NEON.md](./DATABASE_NEON.md).
+
 **Last automated run:** 2026-06-21 — all API smoke checks passed; production DB seeded with The Grand Saloon.

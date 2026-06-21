@@ -1,0 +1,5 @@
+# Copy to deploy/backend-env.yaml (gitignored) — Neon Postgres, no Cloud SQL.
+# Use the POOLED connection string from Neon dashboard (-pooler in hostname).
+DATABASE_URL: 'postgresql+asyncpg://USER:PASSWORD@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/neondb?ssl=require'
+SECRET_KEY: 'your-openssl-generated-key'
+BACKEND_CORS_ORIGINS: 'https://saloon-frontend-lj4j5kxljq-el.a.run.app'

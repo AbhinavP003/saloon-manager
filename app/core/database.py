@@ -33,6 +33,8 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,  # set True locally if you want SQL logs
     pool_pre_ping=True,  # recycle stale connections automatically
+    pool_size=5,
+    max_overflow=0,  # friendly defaults for Neon / serverless Postgres
 )
 
 AsyncSessionLocal = async_sessionmaker(

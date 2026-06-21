@@ -1,14 +1,14 @@
 # GCP Deployment Context
 
-## Current State (beta — stabilized 2026-06)
+## Current State (beta — Neon Postgres)
 
 - **GCP Project**: `saloon-manager-beta-5640`
 - **Region**: `asia-south1`
 - **Artifact Registry**: `saloon-repo`
-- **Cloud SQL**: PostgreSQL instance `saloon-db`, database `saloon`
-- **Runtime service account**: `saloon-run-sa@saloon-manager-beta-5640.iam.gserviceaccount.com` (`roles/cloudsql.client`)
+- **Database**: [Neon](https://neon.tech) PostgreSQL (free tier) — see [DATABASE_NEON.md](./DATABASE_NEON.md)
+- **Runtime service account**: `saloon-run-sa@saloon-manager-beta-5640.iam.gserviceaccount.com`
 - **CI service account**: `github-actions-sa` (push images, deploy Cloud Run)
-- **Migrations**: Applied (`alembic upgrade head`)
+- **Legacy Cloud SQL** (`saloon-db`): delete after Neon cutover to stop ~$70/mo billing
 
 ## Live URLs (canonical)
 
@@ -25,13 +25,12 @@ Health check: `GET /health` on backend → `{"status":"ok","service":"saloon-man
 |--------|-------|
 | `GCP_PROJECT_ID` | `saloon-manager-beta-5640` |
 | `GCP_SA_KEY` | `github-actions-sa` JSON key |
-| `DATABASE_URL` | Cloud SQL socket URL (see deploy/backend-env.yaml) |
+| `DATABASE_URL` | Neon pooled URL with `?ssl=require` |
 | `SECRET_KEY` | Production JWT secret |
-| `CLOUD_SQL_CONNECTION` | `saloon-manager-beta-5640:asia-south1:saloon-db` |
 | `BACKEND_URL` | https://saloon-backend-lj4j5kxljq-el.a.run.app |
 | `FRONTEND_URL` | https://saloon-frontend-lj4j5kxljq-el.a.run.app |
 
-CI fails if `BACKEND_URL` or `FRONTEND_URL` is missing.
+CI fails if `BACKEND_URL`, `FRONTEND_URL`, or Cloud SQL-style `DATABASE_URL` is set.
 
 ## Beta demo accounts
 

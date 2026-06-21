@@ -1,5 +1,5 @@
 # Copy to deploy/backend-env-v2.yaml after frontend deploy (gitignored).
 # Must include ALL three vars — never update one at a time.
-DATABASE_URL: 'postgresql+asyncpg://saloon_user:PASSWORD@/saloon?host=/cloudsql/saloon-manager-beta-5640:asia-south1:saloon-db'
+DATABASE_URL: 'postgresql+asyncpg://USER:PASSWORD@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/neondb?ssl=require'
 SECRET_KEY: 'same-key-as-backend-env.yaml'
-BACKEND_CORS_ORIGINS: 'https://YOUR_FRONTEND_URL'
+BACKEND_CORS_ORIGINS: 'https://saloon-frontend-lj4j5kxljq-el.a.run.app'

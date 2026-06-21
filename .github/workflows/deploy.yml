@@ -136,6 +136,11 @@ jobs:
                   "DATABASE_URL must normalize to postgresql+asyncpg:// "
                   f"(got scheme: {normalized_db_url.split(':', 1)[0]})"
               )
+          if "/cloudsql/" in database_url:
+              sys.exit(
+                  "DATABASE_URL uses Cloud SQL socket — set Neon URL instead "
+                  "(see docs/DATABASE_NEON.md)"
+              )
 
           if not frontend_url:
               sys.exit(
@@ -159,8 +164,7 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --service-account saloon-run-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-            --env-vars-file /tmp/env.yaml \
-            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION }}
+            --env-vars-file /tmp/env.yaml
 
       - name: Verify backend deployment
         env:

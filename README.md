@@ -26,7 +26,7 @@ For a deep dive into our development journey and technical decisions, please ref
 
 ## 🛠️ Tech Stack
 - **Backend**: FastAPI (Python 3.12)
-- **Database**: SQLAlchemy (Async) with PostgreSQL (local via Docker Compose, production via Cloud SQL) and SQLite (testing)
+- **Database**: SQLAlchemy (Async) with PostgreSQL (local via Docker Compose, production via [Neon](docs/DATABASE_NEON.md)) and SQLite (testing)
 - **Security**: OAuth2 with JWT, Pydantic-based Role Management
 - **Management**: `uv` for dependencies, `alembic` for migrations
 
