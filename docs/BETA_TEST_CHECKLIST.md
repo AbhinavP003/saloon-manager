@@ -23,7 +23,7 @@ Run against live URLs before sharing with peers:
 | Confirm booking | Pending → Confirm on dashboard | [x] Status → confirmed |
 | Complete booking | Confirmed → Complete | [x] Status → completed |
 | Cancel | Customer cancels eligible booking | Manual — book 2+ days out, then PATCH `/users/bookings/{id}/cancel` |
-| About | Visit `/about` | Pending next frontend deploy (page added in repo) |
+| About | Visit `/about` | [x] Page loads (deployed revision saloon-frontend-00004-fx4) |
 
 ## Demo credentials (beta only)
 
