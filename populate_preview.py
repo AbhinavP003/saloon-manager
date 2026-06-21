@@ -1,30 +1,38 @@
-import httpx
 import asyncio
+import os
 from datetime import datetime, timedelta, timezone
+
+import httpx
+
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8000").rstrip("/")
+API_V1 = f"{API_BASE}/api/v1"
+
+
+async def register_or_login(client: httpx.AsyncClient, email: str, password: str, **register_extra):
+    resp = await client.post(
+        "/auth/register",
+        json={"email": email, "password": password, **register_extra},
+    )
+    if resp.status_code not in (200, 201, 409):
+        resp.raise_for_status()
+    login = await client.post("/auth/login", data={"username": email, "password": password})
+    login.raise_for_status()
+    return login.json()["access_token"]
 
 
 async def main():
-    async with httpx.AsyncClient(base_url="http://localhost:8000/api/v1") as client:
-        print("--- POPULATING PREVIEW DATA ---")
+    async with httpx.AsyncClient(base_url=API_V1, timeout=30.0) as client:
+        print(f"--- POPULATING PREVIEW DATA ({API_BASE}) ---")
 
-        # 1. Owner Setup
-        email = "owner@saloon.com"
-        await client.post(
-            "/auth/register",
-            json={
-                "email": email,
-                "full_name": "Premium Owner",
-                "password": "password",
-                "role": "owner",
-            },
+        owner_token = await register_or_login(
+            client,
+            "owner@saloon.com",
+            "password",
+            full_name="Premium Owner",
+            role="owner",
         )
-        resp = await client.post(
-            "/auth/login", data={"username": email, "password": "password"}
-        )
-        owner_token = resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {owner_token}"}
 
-        # 2. Create Store
         resp = await client.post(
             "/owner/stores/",
             json={
@@ -36,12 +44,12 @@ async def main():
             },
             headers=headers,
         )
+        resp.raise_for_status()
         store = resp.json()
         sid = store["id"]
         print(f"STORE CREATED: {sid}")
 
-        # 3. Create Services
-        await client.post(
+        hair = await client.post(
             f"/owner/stores/{sid}/services",
             json={
                 "name": "Luxury Haircut",
@@ -51,7 +59,10 @@ async def main():
             },
             headers=headers,
         )
-        resp = await client.post(
+        hair.raise_for_status()
+        sid_hair = hair.json()["id"]
+
+        spa = await client.post(
             f"/owner/stores/{sid}/services",
             json={
                 "name": "Spa Treatment",
@@ -61,17 +72,11 @@ async def main():
             },
             headers=headers,
         )
-        svc_spa = resp.json()
-        svc_hair = (
-            store["services"][0]
-            if "services" in store and store["services"]
-            else svc_spa
-        )
-        sid_hair = svc_hair["id"] if isinstance(svc_hair, dict) else svc_hair.id
+        spa.raise_for_status()
+        svc_spa = spa.json()
 
-        # 4. Create Hours
         for i in range(7):
-            await client.post(
+            hours = await client.post(
                 f"/owner/stores/{sid}/store-hours",
                 json={
                     "day_of_week": i,
@@ -80,11 +85,10 @@ async def main():
                 },
                 headers=headers,
             )
+            hours.raise_for_status()
 
-        # 5. Create Bookings
         tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
 
-        # Pending Booking (Alice)
         await client.post(
             "/users/bookings/",
             json={
@@ -95,8 +99,7 @@ async def main():
             },
         )
 
-        # Confirmed Booking (Bob)
-        resp = await client.post(
+        bob = await client.post(
             "/users/bookings/",
             json={
                 "store_id": sid,
@@ -105,22 +108,21 @@ async def main():
                 "start_time": tomorrow.replace(hour=14, minute=0, second=0).isoformat(),
             },
         )
-        booking_bob = resp.json()
-        await client.patch(
+        bob.raise_for_status()
+        booking_bob = bob.json()
+        confirm = await client.patch(
             f"/owner/bookings/{booking_bob['id']}/status",
             json={"status": "confirmed"},
             headers=headers,
         )
+        confirm.raise_for_status()
 
-        # 6. Customer Setup
-        await client.post(
-            "/auth/register",
-            json={
-                "email": "customer@test.com",
-                "full_name": "Frequent Flyer",
-                "password": "password",
-                "role": "customer",
-            },
+        await register_or_login(
+            client,
+            "customer@test.com",
+            "password",
+            full_name="Frequent Flyer",
+            role="customer",
         )
 
         print("--- COMPLETE ---")

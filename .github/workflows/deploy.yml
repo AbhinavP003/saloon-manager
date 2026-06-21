@@ -58,6 +58,15 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
 
+      - name: Validate deploy secrets
+        env:
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        run: |
+          if [ -z "$FRONTEND_URL" ]; then
+            echo "FRONTEND_URL secret is empty — set it to your Cloud Run frontend URL"
+            exit 1
+          fi
+
       - name: Build and push backend image
         run: |
           docker build -t "${{ env.BACKEND_IMAGE }}:${{ github.sha }}" -t "${{ env.BACKEND_IMAGE }}:latest" .
@@ -129,11 +138,8 @@ jobs:
               )
 
           if not frontend_url:
-              frontend_url = "http://localhost:3000"
-              print(
-                  "WARNING: FRONTEND_URL secret not set; "
-                  "defaulting BACKEND_CORS_ORIGINS to http://localhost:3000. "
-                  "Set FRONTEND_URL to your Cloud Run frontend URL for production CORS."
+              sys.exit(
+                  "FRONTEND_URL is empty — set GitHub secret to your Cloud Run frontend URL"
               )
 
           pairs = [
@@ -155,6 +161,16 @@ jobs:
             --service-account saloon-run-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --env-vars-file /tmp/env.yaml \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION }}
+
+      - name: Verify backend deployment
+        env:
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        run: |
+          BACKEND_URL=$(gcloud run services describe saloon-backend --region ${{ env.REGION }} --format='value(status.url)')
+          curl -sf "$BACKEND_URL/health" | grep -q '"status":"ok"'
+          curl -sf -H "Origin: $FRONTEND_URL" "$BACKEND_URL/api/v1/users/stores/" -D /tmp/cors-headers -o /dev/null
+          grep -qi "access-control-allow-origin: $FRONTEND_URL" /tmp/cors-headers
+          echo "Backend verified at $BACKEND_URL"
 
   # -------------------------------------------------------
   # Job 3: Build & Deploy Frontend
@@ -180,6 +196,15 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
 
+      - name: Validate deploy secrets
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL secret is empty — frontend will bake in localhost:8000"
+            exit 1
+          fi
+
       - name: Build and push frontend image
         run: |
           docker build \
@@ -196,4 +221,13 @@ jobs:
             --image ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --port 3000
+
+      - name: Verify frontend deployment
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          FRONTEND_URL=$(gcloud run services describe saloon-frontend --region ${{ env.REGION }} --format='value(status.url)')
+          curl -sf "$FRONTEND_URL" -o /dev/null
+          echo "Frontend verified at $FRONTEND_URL (API baked to $BACKEND_URL)"

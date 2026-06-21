@@ -24,39 +24,16 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.config import settings
-from app.core.debug_log import debug_log
 
 # ---------------------------------------------------------------------------
 # Engine & session factory
 # ---------------------------------------------------------------------------
 
-# #region agent log
-debug_log(
-    "database.py:engine",
-    "create_engine_start",
-    {"scheme": settings.DATABASE_URL.split(":", 1)[0]},
-    "H5",
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=False,  # set True locally if you want SQL logs
+    pool_pre_ping=True,  # recycle stale connections automatically
 )
-# #endregion
-try:
-    engine = create_async_engine(
-        settings.DATABASE_URL,
-        echo=False,  # set True locally if you want SQL logs
-        pool_pre_ping=True,  # recycle stale connections automatically
-    )
-    # #region agent log
-    debug_log("database.py:engine", "create_engine_ok", {}, "H5")
-    # #endregion
-except Exception as exc:
-    # #region agent log
-    debug_log(
-        "database.py:engine",
-        "create_engine_failed",
-        {"error_type": type(exc).__name__, "error": str(exc)},
-        "H5",
-    )
-    # #endregion
-    raise
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

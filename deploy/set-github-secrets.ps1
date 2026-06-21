@@ -8,8 +8,8 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Write-Error "Install GitHub CLI: https://cli.github.com/"
 }
 
-$BackendUrl = "https://saloon-backend-247064166190.asia-south1.run.app"
-$FrontendUrl = "https://saloon-frontend-247064166190.asia-south1.run.app"
+$BackendUrl = "https://saloon-backend-lj4j5kxljq-el.a.run.app"
+$FrontendUrl = "https://saloon-frontend-lj4j5kxljq-el.a.run.app"
 
 gh secret set GCP_PROJECT_ID --body "saloon-manager-beta-5640"
 gh secret set CLOUD_SQL_CONNECTION --body "saloon-manager-beta-5640:asia-south1:saloon-db"

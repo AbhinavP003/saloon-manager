@@ -1,23 +1,9 @@
 from fastapi import FastAPI
-from app.core.debug_log import debug_log
-
-# #region agent log
-debug_log("main.py:import", "main_import_start", {}, "H4")
-# #endregion
-
 from app.api.v1.api import api_router
 from app.core.config import settings
-
-# #region agent log
-debug_log("main.py:import", "main_import_ok", {}, "H4")
-# #endregion
-
-
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Saloon Manager")
-
-# Allow CORS for local frontend development
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# This one line includes everything!
 app.include_router(api_router, prefix="/api/v1")
 
 

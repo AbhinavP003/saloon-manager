@@ -51,4 +51,4 @@ A high-concurrency full-stack application built with FastAPI and Next.js, design
 - [ ] **Background Tasks**: Email/WhatsApp notifications via Celery/Redis.
 - [x] **Analytics**: Monthly revenue and busy-hour reports for owners.
 - [ ] **Image Support**: Upload photos via S3/Cloudinary.
-- [x] **Deployment**: CI/CD pipeline (GitHub Actions → GCP Cloud Run). Live deploy pending secrets/migrations — see [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md).
+- [x] **Deployment**: CI/CD pipeline live on GCP Cloud Run — see [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md) and [docs/gcp_deployment_context.md](docs/gcp_deployment_context.md).

@@ -8,8 +8,6 @@ sourced exclusively from the .env file — no hardcoded secrets.
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.debug_log import debug_log
-
 
 class Settings(BaseSettings):
     """Central settings object for the Saloon Manager application."""
@@ -75,32 +73,4 @@ class Settings(BaseSettings):
     )
 
 
-# Single application-wide instance — import this everywhere.
-# #region agent log
-debug_log("config.py:settings", "loading_settings_start", {}, "H2")
-# #endregion
-try:
-    settings = Settings()
-    # #region agent log
-    debug_log(
-        "config.py:settings",
-        "loading_settings_ok",
-        {
-            "has_database_url": bool(settings.DATABASE_URL),
-            "database_scheme": settings.DATABASE_URL.split(":", 1)[0],
-            "cors_count": len(settings.cors_origins),
-            "port": settings.PORT,
-        },
-        "H2",
-    )
-    # #endregion
-except Exception as exc:
-    # #region agent log
-    debug_log(
-        "config.py:settings",
-        "loading_settings_failed",
-        {"error_type": type(exc).__name__, "error": str(exc)},
-        "H2",
-    )
-    # #endregion
-    raise
+settings = Settings()
