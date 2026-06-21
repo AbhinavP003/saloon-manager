@@ -23,6 +23,7 @@ tests/
 docs/
 scripts/
 !scripts/start.sh
+!scripts/start-with-migrate.sh
 *.db
 preview.db
 init_db.py
