@@ -1,45 +1,37 @@
-# Fresh deployment (manual)
+# Deployment
 
-Scripts and configs for redeploying Saloon Manager to GCP Cloud Run with **Neon Postgres**.
+## GCE single-VM beta (~$0) — recommended
 
-## Prerequisites
+One Always Free e2-micro in `us-central1` runs Postgres + backend + frontend + nginx.
 
-- `gcloud` CLI authenticated to `saloon-manager-beta-5640`
-- Neon database — see [docs/DATABASE_NEON.md](../docs/DATABASE_NEON.md)
-- Copy `deploy/backend-env.neon.yaml.example` → `deploy/backend-env.yaml` (gitignored) and fill in
-
-## Quick deploy (PowerShell)
-
-From repo root, after filling env files:
+See **[docs/DEPLOY_GCE.md](../docs/DEPLOY_GCE.md)** for full guide.
 
 ```powershell
-.\scripts\migrate_neon.ps1          # schema on Neon
-.\deploy\deploy-fresh.ps1           # full stack
-# or after backend-env-v2.yaml is ready:
-.\deploy\deploy-neon-cutover.ps1    # backend only (Neon cutover)
+.\deploy\gce-setup.ps1                    # one-time VM create
+# SSH to VM, clone repo, copy deploy/.env.gce.example → deploy/.env
+.\deploy\gce-deploy.ps1                   # on VM
+.\deploy\gce-cutover.ps1 -VmIp "..." -VerifyOnly   # after deploy
+.\deploy\gce-cutover.ps1 -VmIp "..." -Teardown     # delete Cloud SQL + Cloud Run
 ```
 
-## Live URLs (canonical)
+CI (`.github/workflows/deploy.yml`) runs **tests only**; deploy manually for beta.
 
-| Service | URL |
-|---------|-----|
-| Backend | https://saloon-backend-lj4j5kxljq-el.a.run.app |
-| Frontend | https://saloon-frontend-lj4j5kxljq-el.a.run.app |
+## Neon + Cloud Run (alternative)
 
-## Seed demo data (production API)
+Lower ops, Mumbai-friendly Cloud Run region. See [docs/DATABASE_NEON.md](../docs/DATABASE_NEON.md).
 
 ```powershell
-$env:API_BASE_URL = "https://saloon-backend-lj4j5kxljq-el.a.run.app"
+.\scripts\migrate_neon.ps1
+.\deploy\deploy-fresh.ps1
+```
+
+## Seed demo data
+
+```powershell
+$env:API_BASE_URL = "http://YOUR_VM_IP"   # GCE
+# or
+$env:API_BASE_URL = "https://saloon-backend-....run.app"   # Cloud Run
 python populate_preview.py
 ```
 
-## GitHub Actions secrets
-
-Set in repo Settings → Secrets → Actions (or run `deploy/set-github-secrets.ps1` with `gh` CLI):
-
-- `GCP_PROJECT_ID`, `GCP_SA_KEY`, `DATABASE_URL` (Neon pooled URL), `SECRET_KEY`
-- `BACKEND_URL`, `FRONTEND_URL` = live URLs above
-
-`CLOUD_SQL_CONNECTION` is **not used** anymore.
-
-Runtime service account `saloon-run-sa` is configured in `.github/workflows/deploy.yml` (no Cloud SQL attachment).
+Demo: `owner@saloon.com` / `password`

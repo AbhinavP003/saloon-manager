@@ -42,7 +42,9 @@ ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 
 COPY scripts/start.sh /app/start.sh
-RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
+COPY scripts/start-with-migrate.sh /app/start-with-migrate.sh
+RUN sed -i 's/\r$//' /app/start.sh /app/start-with-migrate.sh \
+    && chmod +x /app/start.sh /app/start-with-migrate.sh
 
 # Run uvicorn in production mode (no --reload)
 CMD ["/app/start.sh"]

@@ -14,3 +14,5 @@ sa-key.json
 deploy/secrets.worksheet
 deploy/backend-env.yaml
 deploy/backend-env-v2.yaml
+deploy/.env
+deploy/.env.gce.bootstrap
